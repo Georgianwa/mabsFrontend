@@ -1,0 +1,155 @@
+<%- include('partials/header') %>
+
+<main class="all-products-page">
+    <div class="page-header">
+        <div class="container">
+            <h1>All Products</h1>
+            <p>Browse our complete collection of electronics and appliances</p>
+        </div>
+    </div>
+    
+    <section class="products-content">
+        <div class="container">
+            <div class="products-header">
+                <div class="results-info">
+                    <p class="results-count">Showing <strong><%= products.length %></strong> products</p>
+                </div>
+                
+                <div class="sort-filter">
+                    <form action="/all-products" method="GET" style="display: flex; gap: 15px; align-items: center;">
+                        <label for="sort-by">Sort by:</label>
+                        <select id="sort-by" name="sort" onchange="this.form.submit()">
+                            <option value="name">Product Name</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="newest">Newest</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+            
+            <% if (products.length > 0) { %>
+                <div class="products-grid">
+                    <% products.forEach(product => { %>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <a href="/product/<%= product._id || product.id %>">
+                                    <img src="<%= product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg' %>" 
+                                         alt="<%= product.name %>">
+                                </a>
+                                <% if (product.featured) { %>
+                                    <span class="badge">Featured</span>
+                                <% } %>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-brand"><%= product.brand %></p>
+                                <h3 class="product-name">
+                                    <a href="/product/<%= product._id || product.id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="product-description">
+                                    <%= product.description.substring(0, 100) %>...
+                                </p>
+                                <p class="product-price">
+                                    ₦<%= product.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                </p>
+                                <a href="/product/<%= product._id || product.id %>" class="btn btn-outline">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="no-products">
+                    <i class="fas fa-box-open"></i>
+                    <h2>No Products Available</h2>
+                    <p>We're currently updating our inventory. Please check back soon!</p>
+                    <a href="/" class="btn btn-primary">Go to Homepage</a>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</main>
+
+<style>
+    .all-products-page {
+        padding: 0;
+    }
+
+    .products-content {
+        padding: 60px 0;
+    }
+
+    .products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .results-info {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .results-count {
+        font-size: 18px;
+        color: #666;
+    }
+
+    .sort-filter {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .sort-filter select {
+        padding: 10px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .sort-filter select:hover,
+    .sort-filter select:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+
+    .no-products {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .no-products i {
+        font-size: 80px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .no-products h2 {
+        font-size: 32px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .no-products p {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .products-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sort-filter {
+            width: 100%;
+        }
+    }
+</style>
+
+<%- include('partials/footer') %>

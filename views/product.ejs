@@ -1,0 +1,101 @@
+
+<%- include('partials/header') %>
+
+<main class="product-page">
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Home</a> / <a href="/categories">Categories</a> / <a href="/category/<%= product.category %>">Category</a> / <span><%= product.name %></span>
+        </div>
+        
+        <div class="product-detail">
+            <div class="product-gallery">
+                <div class="main-image">
+                    <img src="<%= product.images[0] %>" alt="<%= product.name %>" id="main-product-image">
+                </div>
+                <% if (product.images.length > 1) { %>
+                    <div class="thumbnail-images">
+                        <% product.images.forEach((image, index) => { %>
+                            <img src="<%= image %>" alt="<%= product.name %>" class="<%= index === 0 ? 'active' : '' %>" onclick="changeImage('<%= image %>')">
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+            
+            <div class="product-details">
+                <p class="product-brand"><%= product.brand %></p>
+                <h1><%= product.name %></h1>
+                
+                <div class="product-price-section">
+                    <p class="product-price">NGN<%= product.price.toFixed(2) %></p>
+                </div>
+                
+                <div class="product-description">
+                    <h3>Description</h3>
+                    <p><%= product.description %></p>
+                </div>
+                
+                <div class="product-actions">
+                    <a href="/" class="btn btn-primary">Add to Cart</a>
+                </div>
+                
+                <div class="product-meta">
+                    <p><strong>Category:</strong> <%= product.category %></p>
+                    <p><strong>Brand:</strong> <%= product.brand %></p>
+                    <p><strong>Product ID:</strong> <%= product.id %></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="product-specifications">
+            <h[[]
+            2>Specifications</h2>
+            <div class="specs-grid">
+                <% Object.entries(product.specifications).forEach(([key, value]) => { %>
+                    <div class="spec-item">
+                        <strong><%= key %>:</strong>
+                        <span><%= value %></span>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+        
+        <% if (relatedProducts.length > 0) { %>
+            <section class="related-products">
+                <h2>Related Products</h2>
+                <div class="products-grid">
+                    <% relatedProducts.forEach(relatedProduct => { %>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <a href="/product/<%= relatedProduct.id %>">
+                                    <img src="<%= relatedProduct.images[0] %>" alt="<%= relatedProduct.name %>">
+                                </a>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-brand"><%= relatedProduct.brand %></p>
+                                <h3 class="product-name">
+                                    <a href="/product/<%= relatedProduct.id %>"><%= relatedProduct.name %></a>
+                                </h3>
+                                <p class="product-price">$<%= relatedProduct.price.toFixed(2) %></p>
+                                <a href="/product/<%= relatedProduct.id %>" class="btn btn-outline">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </section>
+        <% } %>
+    </div>
+</main>
+
+<script>
+function changeImage(imageSrc) {
+    document.getElementById('main-product-image').src = imageSrc;
+    document.querySelectorAll('.thumbnail-images img').forEach(img => {
+        img.classList.remove('active');
+        if (img.src === imageSrc) {
+            img.classList.add('active');
+        }
+    });
+}
+</script>
+
+<%- include('partials/footer') %>

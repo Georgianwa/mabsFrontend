@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit About Page - Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+        }
+        .admin-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .admin-nav {
+            margin-top: 15px;
+        }
+        .admin-nav ul {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            list-style: none;
+        }
+        .admin-nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            background-color: var(--secondary-color);
+        }
+        .admin-content {
+            padding: 40px 0;
+        }
+        .admin-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            max-width: 900px;
+        }
+        .admin-card h2 {
+            margin-top: 0;
+            color: var(--dark-color);
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .form-section:last-child {
+            border-bottom: none;
+        }
+        .form-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        textarea {
+            font-family: inherit;
+            resize: vertical;
+        }
+        .preview-section {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .preview-section h3 {
+            margin-top: 0;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .button-group button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body class="admin-page">
+    <header class="admin-header">
+        <div class="container">
+            <h1><i class="fas fa-file-alt"></i> Edit About Page</h1>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="/admin/dashboard">Dashboard</a></li>
+                    <li><a href="/admin/products">Products</a></li>
+                    <li><a href="/admin/categories">Categories</a></li>
+                    <li><a href="/admin/brands">Brands</a></li>
+                    <li><a href="/admin/about" class="active">About Page</a></li>
+                    <li><a href="/admin/logout" style="background-color: var(--error-color);">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="admin-content">
+        <div class="container">
+            <div class="admin-card">
+                <h2>Edit About Page Content</h2>
+                
+                <form id="aboutForm" method="POST" action="/admin/about/update">
+                    <!-- Who We Are Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Who We Are</h3>
+                        
+                        <div class="form-group">
+                            <label for="introTitle">Section Title</label>
+                            <input type="text" id="introTitle" name="introTitle" placeholder="Who We Are" value="Who We Are">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="introText">Section Text</label>
+                            <textarea id="introText" name="introText" rows="6" placeholder="Enter the introductory text..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="introImage">Section Image URL</label>
+                            <input type="url" id="introImage" name="introImage" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </div>
+                    
+                    <!-- Why Choose Us Section -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-star"></i> Why Choose Us</h3>
+                        
+                        <div class="form-group">
+                            <label for="whyTitle">Section Title</label>
+                            <input type="text" id="whyTitle" name="whyTitle" placeholder="Why Choose Us?" value="Why Choose Us?">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="feature1">Feature 1 Title</label>
+                            <input type="text" id="feature1" name="feature1" placeholder="e.g., Quality Products">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="feature1Desc">Feature 1 Description</label>
+                            <textarea id="feature1Desc" name="feature1Desc" rows="2" placeholder="Description..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="feature2">Feature 2 Title</label>
+                            <input type="text" id="feature2" name="feature2" placeholder="e.g., Competitive Pricing">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="feature2Desc">Feature 2 Description</label>
+                            <textarea id="feature2Desc" name="feature2Desc" rows="2" placeholder="Description..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Mission Statement -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-bullseye"></i> Mission Statement</h3>
+                        
+                        <div class="form-group">
+                            <label for="mission">Our Mission</label>
+                            <textarea id="mission" name="mission" rows="4" placeholder="Describe your company's mission..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Meta Information -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-cogs"></i> Meta Information</h3>
+                        
+                        <div class="form-group">
+                            <label for="metaDescription">Meta Description (for SEO)</label>
+                            <textarea id="metaDescription" name="metaDescription" rows="3" placeholder="Brief description for search engines..." maxlength="160"></textarea>
+                            <small>Maximum 160 characters</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="metaKeywords">Keywords (comma-separated)</label>
+                            <input type="text" id="metaKeywords" name="metaKeywords" placeholder="electronics, appliances, shopping">
+                        </div>
+                    </div>
+                    
+                    <!-- Preview -->
+                    <div class="preview-section">
+                        <h3>Preview</h3>
+                        <p><strong>Note:</strong> Changes will appear on the live website after you save.</p>
+                        <a href="/about" target="_blank" class="btn btn-outline">View Live About Page <i class="fas fa-external-link-alt"></i></a>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <a href="/admin/dashboard" class="btn btn-outline">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Character counter for meta description
+        document.getElementById('metaDescription').addEventListener('input', function() {
+            const remaining = 160 - this.value.length;
+            const label = this.parentElement.querySelector('small');
+            label.textContent = `${remaining} characters remaining`;
+        });
+        
+        // Form validation
+        document.getElementById('aboutForm').addEventListener('submit', function(e) {
+            const introText = document.getElementById('introText').value.trim();
+            const mission = document.getElementById('mission').value.trim();
+            
+            if (!introText && !mission) {
+                e.preventDefault();
+                alert('Please fill in at least the introductory text or mission statement.');
+                return;
+            }
+            
+            alert('About page content updated successfully!');
+        });
+    </script>
+</body>
+</html>

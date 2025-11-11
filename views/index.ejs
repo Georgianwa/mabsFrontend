@@ -1,0 +1,131 @@
+<%- include('partials/header') %>
+
+<main class="homepage">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Welcome to Mabs Electronics Limited</h1>
+                <p>We have the widest selection of electronic appliances for your household and industrial needs!</p>
+                <p>Use the navigation bar to explore our offerings</p>
+                <a href="/categories" class="btn btn-primary">Shop Now</a>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Promotional Banners -->
+    <section class="promo-banners">
+        <div class="container">
+            <div class="promo-grid">
+                <div class="promo-card">
+                    <i class="fas fa-shipping-fast"></i>
+                    <h3>Free Shipping</h3>
+                    <p>On orders over ₦50,000</p>
+                </div>
+                <div class="promo-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Warranty Protection</h3>
+                    <p>Extended warranty available</p>
+                </div>
+                <div class="promo-card">
+                    <i class="fas fa-headset"></i>
+                    <h3>24/7 Support</h3>
+                    <p>Always here to help</p>
+                </div>
+                <div class="promo-card">
+                    <i class="fas fa-undo"></i>
+                    <h3>Easy Returns</h3>
+                    <p>30-day return policy</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Featured Products -->
+    <section class="featured-products">
+        <div class="container">
+            <div class="section-header">
+                <h2>Featured Products</h2>
+                <p>Check out our best-selling items</p>
+            </div>
+            
+            <% if (featuredProducts && featuredProducts.length > 0) { %>
+                <div class="products-grid">
+                    <% featuredProducts.forEach(product => { %>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <a href="/product/<%= product._id %>">
+                                    <img src="<%= product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg' %>" 
+                                         alt="<%= product.name %>">
+                                </a>
+                                <span class="badge">Featured</span>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-brand"><%= product.brand %></p>
+                                <h3 class="product-name">
+                                    <a href="/product/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="product-price">₦<%= product.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
+                                <a href="/product/<%= product._id %>" class="btn btn-outline">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <p class="text-center">No featured products available at the moment.</p>
+            <% } %>
+        </div>
+    </section>
+    
+    <!-- Category Highlights -->
+    <section class="category-highlights">
+        <div class="container">
+            <div class="section-header">
+                <h2>Shop by Category</h2>
+                <p>Browse our extensive collection</p>
+            </div>
+            
+            <% if (categories && categories.length > 0) { %>
+                <div class="category-grid">
+                    <% categories.forEach(category => { %>
+                        <div class="category-card">
+                            <a href="/category/<%= category._id %>">
+                                <img src="<%= category.image || '/images/placeholder.jpg' %>" alt="<%= category.name %>">
+                                <div class="category-overlay">
+                                    <h3><%= category.name %></h3>
+                                    <p><%= category.description %></p>
+                                </div>
+                            </a>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+    </section>
+    
+    <!-- Brand Showcase -->
+    <section class="brands-showcase">
+        <div class="container">
+            <div class="section-header">
+                <h2>Top Brands</h2>
+                <p>Trusted brands, quality products</p>
+            </div>
+            
+            <% if (brands && brands.length > 0) { %>
+                <div class="brands-grid">
+                    <% brands.forEach(brand => { %>
+                        <div class="brand-card">
+                            <img src="<%= brand.logo || '/images/placeholder.jpg' %>" alt="<%= brand.name %>">
+                        </div>
+                    <% }); %>
+                </div>
+                
+                <div class="text-center">
+                    <a href="/brands" class="btn btn-secondary">View All Brands</a>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

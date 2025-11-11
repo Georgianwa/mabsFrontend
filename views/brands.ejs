@@ -1,0 +1,72 @@
+<%- include('partials/header') %>
+
+<main class="brands-page">
+    <div class="page-header" style="background-image: url('/images/heroHome.jpg'); background-size: cover; background-position: center;">
+        <div class="container">
+            <h1>Shop by Brand</h1>
+            <p>Browse products from your favorite brands</p>
+        </div>
+    </div>
+    
+    <section class="brands-content">
+        <div class="container">
+            <div class="brands-showcase-large">
+                <% if (brands && brands.length > 0) { %>
+                    <% brands.forEach(brand => { %>
+                        <% 
+                            // Get products for this brand using brand name or id as key
+                            const brandName = brand.name;
+                            const brandId = brand._id || brand.id;
+                            const productsForBrand = brandProducts[brandName] || brandProducts[brandId] || [];
+                        %>
+                        <div class="brand-section">
+                            <div class="brand-header">
+                                <img src="<%= brand.logo %>" alt="<%= brand.name %>">
+                                <h2><%= brand.name %></h2>
+                                <p><%= productsForBrand.length %> products available</p>
+                            </div>
+                            
+                            <% if (productsForBrand.length > 0) { %>
+                                <div class="products-grid">
+                                    <% productsForBrand.slice(0, 4).forEach(product => { %>
+                                        <div class="product-card">
+                                            <div class="product-image">
+                                                <a href="/product/<%= product._id || product.id %>">
+                                                    <img src="<%= product.images && product.images[0] ? product.images[0] : '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                                </a>
+                                                <% if (product.featured) { %>
+                                                    <span class="badge">Featured</span>
+                                                <% } %>
+                                            </div>
+                                            <div class="product-info">
+                                                <p class="product-brand"><%= product.brand %></p>
+                                                <h3 class="product-name">
+                                                    <a href="/product/<%= product._id || product.id %>"><%= product.name %></a>
+                                                </h3>
+                                                <p class="product-price">$<%= product.price ? product.price.toFixed(2) : '0.00' %></p>
+                                                <a href="/product/<%= product._id || product.id %>" class="btn btn-outline">View Details</a>
+                                            </div>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                                
+                                <% if (productsForBrand.length > 4) { %>
+                                    <div class="text-center" style="margin-top: 20px;">
+                                        <a href="/search?q=<%= encodeURIComponent(brand.name) %>" class="btn btn-secondary">View All <%= brand.name %> Products</a>
+                                    </div>
+                                <% } %>
+                            <% } %>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div style="text-align: center; padding: 80px 20px;">
+                        <i class="fas fa-tags" style="font-size: 80px; color: #ddd; margin-bottom: 20px;"></i>
+                        <p style="font-size: 18px; color: #666;">No brands available at the moment.</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

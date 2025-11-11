@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Products - Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="admin-page">
+    <header class="admin-header">
+        <div class="container">
+            <h1><i class="fas fa-box"></i> Manage Products</h1>
+            <nav class="admin-nav">
+                <ul>
+                    <li><a href="/admin/dashboard">Dashboard</a></li>
+                    <li><a href="/admin/products" class="active">Products</a></li>
+                    <li><a href="/admin/categories">Categories</a></li>
+                    <li><a href="/admin/brands">Brands</a></li>
+                    <li><a href="/admin/about">About Page</a></li>
+                    <li><a href="/admin/logout" style="background-color: var(--error-color);">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <main class="admin-content">
+        <div class="container">
+            <div class="admin-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>All Products (<%= products.length %>)</h2>
+                    <button onclick="openAddModal()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Product
+                    </button>
+                </div>
+                
+                <% if (typeof message !== 'undefined' && message) { %>
+                    <div class="alert alert-success">
+                        <%= message %>
+                    </div>
+                <% } %>
+                
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Brand</th>
+                            <th>Price (₦)</th>
+                            <th>Category</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% products.forEach(product => { %>
+                            <tr>
+                                <td><img src="<%= product.images && product.images[0] %>" alt="<%= product.name %>"></td>
+                                <td><%= product.name %></td>
+                                <td><%= product.brand %></td>
+                                <td>₦<%= product.price.toLocaleString() %></td>
+                                <td><%= product.category %></td>
+                                <td><%= product.featured ? '✓' : '✗' %></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button onclick='openEditModal(<%= JSON.stringify(JSON.stringify(product)) %>)' class="btn btn-small btn-edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button onclick="deleteProduct('<%= product._id %>')" class="btn btn-small btn-delete">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Product</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="productForm" action="/admin/products/add" method="POST">
+                <input type="hidden" id="productId" name="id">
+                
+                <div class="form-group">
+                    <label for="name">Product Name *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="brand">Brand *</label>
+                    <select id="brand" name="brand" required>
+                        <option value="">Select Brand</option>
+                        <% brands.forEach(brand => { %>
+                            <option value="<%= brand.name %>"><%= brand.name %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <% categories.forEach(category => { %>
+                            <option value="<%= category._id %>"><%= category.name %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price">Price (₦) *</label>
+                    <input type="number" id="price" name="price" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageFile">Product Image *</label>
+                    <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                    <small>Max size: 5MB. Formats: JPG, PNG, WebP</small>
+  
+                    <!-- Preview -->
+                    <div id="imagePreview" style="margin-top: 10px;"></div>
+  
+                    <!-- Hidden field to store uploaded URL -->
+                    <input type="hidden" id="images" name="images">
+                </div>
+
+                <script>
+                // Image upload handler
+                document.getElementById('imageFile').addEventListener('change', async function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+  
+                    // Show preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('imagePreview').innerHTML = 
+                            `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
+                    };
+                    reader.readAsDataURL(file);
+  
+                // Upload to server
+                const formData = new FormData();
+                formData.append('image', file);
+  
+                try {
+                    const response = await fetch('/upload-product-image', {
+                        method: 'POST',
+                        body: formData
+                    });
+    
+                    const data = await response.json();
+    
+                    if (data.success) {
+                        document.getElementById('images').value = data.url;
+                        alert('Image uploaded successfully!');
+                    } else {
+                        alert('Upload failed: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('Upload error: ' + error.message);
+                }
+                });
+                </script>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="featured" name="featured">
+                        Featured Product
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="specifications">Specifications (JSON format)</label>
+                    <textarea id="specifications" name="specifications" rows="4" placeholder='{"Screen Size": "65 inches", "Resolution": "4K"}'></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> Save Product
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Product';
+            document.getElementById('productForm').action = '/admin/products/add';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productModal').classList.add('active');
+        }
+        
+        function openEditModal(productData) {
+            const product = JSON.parse(JSON.parse(productData));
+            document.getElementById('modalTitle').textContent = 'Edit Product';
+            document.getElementById('productForm').action = `/admin/products/edit/${product._id}`;
+            
+            document.getElementById('productId').value = product._id;
+            document.getElementById('name').value = product.name;
+            document.getElementById('brand').value = product.brand;
+            document.getElementById('category').value = product.category;
+            document.getElementById('price').value = product.price;
+            document.getElementById('description').value = product.description;
+            document.getElementById('images').value = product.images ? product.images[0] : '';
+            document.getElementById('featured').checked = product.featured;
+            document.getElementById('specifications').value = JSON.stringify(product.specifications || {}, null, 2);
+            
+            document.getElementById('productModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('active');
+        }
+        
+        function deleteProduct(id) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                fetch(`/admin/products/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Product deleted successfully');
+                        location.reload();
+                    } else {
+                        alert('Error deleting product');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting product');
+                });
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('productModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

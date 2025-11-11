@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    
+    <!-- Font Awesome Icons - CRITICAL: This loads the icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer" />
+    
+    <!-- Your Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <!-- Top Bar with Contact Info -->
+        <div class="top-bar">
+            <div class="container">
+                <div class="top-bar-content">
+                    <div class="contact-info">
+                        <span>
+                            <i class="fas fa-phone"></i> phone number
+                        </span>
+                        <span>
+                            <i class="fas fa-envelope"></i> sales@mabselectronics.com
+                        </span>
+                    </div>
+                    <div class="top-links">
+                        <a href="/cart">
+                            <i class="fas fa-shopping-cart"></i> My Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Header with Logo and Search -->
+        <div class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <a href="/">
+                            <img src="/images/mabsLogo.jpg" alt="Mabs Electronics Limited Logo">
+                        </a>
+                    </div>
+                    
+                    <div class="search-bar">
+                        <form action="/search" method="GET">
+                            <input type="text" name="q" placeholder="Search for products..." required>
+                            <button type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Optional: Add header actions if needed -->
+                    <!-- 
+                    <div class="header-actions">
+                        <a href="/cart" class="header-btn">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Cart</span>
+                        </a>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Menu -->
+        <%- include('navigation') %>
+    </header>

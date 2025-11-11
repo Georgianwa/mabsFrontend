@@ -1,0 +1,48 @@
+<%- include('partials/header') %>
+
+<main class="brand-page">
+    <div class="page-header">
+        <div class="container">
+            <img src="<%= brand.logo %>" alt="<%= brand.name %>" style="max-height: 100px; margin: 0 auto 20px;">
+            <h1><%= brand.name %></h1>
+            <p><%= products.length %> products available</p>
+        </div>
+    </div>
+    
+    <section class="brand-content">
+        <div class="container">
+            <% if (products.length > 0) { %>
+                <div class="products-grid">
+                    <% products.forEach(product => { %>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <a href="/product/<%= product._id %>">
+                                    <img src="<%= product.images[0] %>" alt="<%= product.name %>">
+                                </a>
+                                <% if (product.featured) { %>
+                                    <span class="badge">Featured</span>
+                                <% } %>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-brand"><%= product.brand %></p>
+                                <h3 class="product-name">
+                                    <a href="/product/<%= product._id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="product-price">₦<%= product.price.toLocaleString() %></p>
+                                <a href="/product/<%= product._id %>" class="btn btn-outline">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="no-products">
+                    <i class="fas fa-box-open"></i>
+                    <p>No products available from this brand at the moment.</p>
+                    <a href="/brands" class="btn btn-primary">Browse Other Brands</a>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

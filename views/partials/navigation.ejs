@@ -1,0 +1,39 @@
+
+<nav class="main-nav">
+    <div class="container">
+        <ul class="nav-menu">
+            <li><a href="/" class="<%= title === 'Home - Mabs Electronics Store' ? 'active' : '' %>">Home</a></li>
+            <li class="has-dropdown">
+                <a href="/categories">All Categories <i class="fas fa-chevron-down"></i></a>
+                <ul class="dropdown-menu">
+                    <% if (typeof categories !== 'undefined') { %>
+                        <% categories.forEach(category => { %>
+                            <li><a href="/category/<%= category.id %>"><%= category.name %></a></li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+            </li>
+
+            <li class="has-dropdown">
+                <a href="/brands">Shop by Brand <i class="fas fa-chevron-down"></i></a>
+                <ul class="dropdown-menu">
+                    <% if (typeof brands !== 'undefined') { %>
+                        <% brands.forEach(brand => { %>
+                            <li><a href="/brand/<%= brand.id %>"><%= brand.name %></a></li>
+                        <% }); %>
+                    <% } %>
+                </ul>
+            </li>
+
+
+
+            <li><a href="/products" class="<%= title === 'All products' ? 'active' : '' %>">All products</a></li>
+            <li><a href="/about" class="<%= title === 'About Us' ? 'active' : '' %>">About Us</a></li>
+            <li><a href="/contact" class="<%= title === 'Contact Us' ? 'active' : '' %>">Contact</a></li>
+        </ul>
+        
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</nav>

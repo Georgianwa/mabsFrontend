@@ -1,0 +1,68 @@
+
+<%- include('partials/header') %>
+
+<main class="search-page">
+    <div class="page-header">
+        <div class="container">
+            <h1>Search Results</h1>
+            <% if (query) { %>
+                <p>Results for: "<%= query %>"</p>
+            <% } %>
+        </div>
+    </div>
+    
+    <section class="search-content">
+        <div class="container">
+            <div class="search-info">
+                <p class="results-count">Found <%= results.length %> product(s)</p>
+            </div>
+            
+            <% if (results.length > 0) { %>
+                <div class="products-grid">
+                    <% results.forEach(product => { %>
+                        <div class="product-card">
+                            <div class="product-image">
+                                <a href="/product/<%= product.id %>">
+                                    <img src="<%= product.images[0] %>" alt="<%= product.name %>">
+                                </a>
+                                <% if (product.featured) { %>
+                                    <span class="badge">Featured</span>
+                                <% } %>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-brand"><%= product.brand %></p>
+                                <h3 class="product-name">
+                                    <a href="/product/<%= product.id %>"><%= product.name %></a>
+                                </h3>
+                                <p class="product-description"><%= product.description.substring(0, 80) %>...</p>
+                                <p class="product-price">$<%= product.price.toFixed(2) %></p>
+                                <a href="/product/<%= product.id %>" class="btn btn-outline">View Details</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h2>No products found</h2>
+                    <% if (query) { %>
+                        <p>We couldn't find any products matching "<%= query %>"</p>
+                    <% } else { %>
+                        <p>Please enter a search term</p>
+                    <% } %>
+                    <div class="search-suggestions">
+                        <h3>Search Suggestions:</h3>
+                        <ul>
+                            <li>Try using more general keywords</li>
+                            <li>Check your spelling</li>
+                            <li>Browse our <a href="/categories">categories</a></li>
+                            <li>Explore our <a href="/brands">brands</a></li>
+                        </ul>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>
