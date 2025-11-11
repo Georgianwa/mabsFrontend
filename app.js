@@ -684,7 +684,10 @@ app.delete('/admin/brands/:id', isAdmin, async (req, res) => {
   }
 });
 
-// ===== IMAGE UPLOAD ROUTE =====
+// ===== IMAGE UPLOAD ROUTES =====
+// ✅ FIXED: Now routes to correct backend API endpoints
+
+// Upload product image
 app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -699,7 +702,7 @@ app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, r
 
     const token = apiService.getToken(req);
     const response = await axios.post(
-      `${API_BASE_URL}/upload/product`,
+      `${API_BASE_URL}/upload/product`,  // ✅ FIXED: Correct endpoint
       formData,
       {
         headers: {
@@ -715,6 +718,76 @@ app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, r
     res.json({ 
       success: false, 
       message: error.response?.data?.message || error.message 
+    });
+  }
+});
+
+// Upload category image
+app.post('/upload-category-image', isAdmin, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.json({ success: false, message: 'No file uploaded' });
+    }
+
+    const formData = new FormData();
+    formData.append('image', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype
+    });
+
+    const token = apiService.getToken(req);
+    const response = await axios.post(
+      `${API_BASE_URL}/upload/category`,  // ✅ Category endpoint
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Upload error:', error.response?.data || error.message);
+    res.json({ 
+      success: false, 
+      message: error.response?.data?.message || error.message 
+    });
+  }
+});
+
+// Upload brand logo
+app.post('/upload-brand-image', isAdmin, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.json({ success: false, message: 'No file uploaded' });
+    }
+
+    const formData = new FormData();
+    formData.append('image', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype
+    });
+
+    const token = apiService.getToken(req);
+    const response = await axios.post(
+      `${API_BASE_URL}/upload/brand`,  // ✅ Brand endpoint
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Upload error:', error.response?.data || error.message);
+    res.json({ 
+      success: false, 
+      message: error.response?.data||error.message 
     });
   }
 });

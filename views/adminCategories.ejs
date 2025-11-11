@@ -126,6 +126,22 @@
             cursor: pointer;
             color: #666;
         }
+        .upload-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .upload-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .upload-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -176,12 +192,16 @@
                         <tbody>
                             <% categories.forEach(category => { %>
                                 <tr>
-                                    <td><img src="<%= category.image || '/images/placeholder.jpg' %>" alt="<%= category.name %>" style="height: 50px; object-fit: cover; border-radius: 5px;"></td>
+                                    <td>
+                                        <img src="<%= (category.image && category.image.url) ? category.image.url : '/images/placeholder.jpg' %>" 
+                                             alt="<%= category.title %>" 
+                                             style="height: 50px; width: 50px; object-fit: cover; border-radius: 5px;">
+                                    </td>
                                     <td><%= category.title %></td>
-                                    <td><%= category.description.substring(0, 50) %>...</td>
+                                    <td><%= category.description ? category.description.substring(0, 50) + '...' : 'No description' %></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <button onclick='openEditModal(<%= JSON.stringify(JSON.stringify(category)) %>)' class="btn btn-small btn-edit">
+                                            <button onclick='openEditModal(<%= JSON.stringify(category) %>)' class="btn btn-small btn-edit">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <button onclick="deleteCategory('<%= category._id || category.id %>')" class="btn btn-small btn-delete">
@@ -207,7 +227,7 @@
                 <h2 id="modalTitle">Add New Category</h2>
                 <button class="close-modal" onclick="closeModal()">&times;</button>
             </div>
-            <form id="categoryForm" action="/admin/categories/add" method="POST">
+            <form id="categoryForm">
                 <input type="hidden" id="categoryId" name="id">
                 
                 <div class="form-group">
@@ -216,61 +236,26 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="description">Description *</label>
-                    <textarea id="description" name="description" rows="4" required></textarea>
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <label for="imageFile">Category Image *</label>
-                    <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                    <label for="imageFile">Category Image</label>
+                    <input type="file" id="imageFile" accept="image/*">
                     <small>Max size: 5MB. Formats: JPG, PNG, WebP</small>
-  
+                    
                     <!-- Preview -->
                     <div id="imagePreview" style="margin-top: 10px;"></div>
-  
+                    
+                    <!-- Upload Status -->
+                    <div id="uploadStatus" class="upload-status"></div>
+                    
                     <!-- Hidden field to store uploaded URL -->
-                    <input type="hidden" id="images" name="images">
+                    <input type="hidden" id="imageUrl" name="image">
                 </div>
-
-                <script>
-                // Image upload handler
-                document.getElementById('imageFile').addEventListener('change', async function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-  
-                    // Show preview
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('imagePreview').innerHTML = 
-                            `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
-                    };
-                    reader.readAsDataURL(file);
-  
-                // Upload to server
-                const formData = new FormData();
-                formData.append('image', file);
-  
-                try {
-                    const response = await fetch('/upload-product-image', {
-                        method: 'POST',
-                        body: formData
-                    });
-    
-                    const data = await response.json();
-    
-                    if (data.success) {
-                        document.getElementById('images').value = data.url;
-                        alert('Image uploaded successfully!');
-                    } else {
-                        alert('Upload failed: ' + data.message);
-                    }
-                } catch (error) {
-                    alert('Upload error: ' + error.message);
-                }
-                });
-                </script>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
                     <i class="fas fa-save"></i> Save Category
                 </button>
             </form>
@@ -278,24 +263,117 @@
     </div>
     
     <script>
+        let uploadedImageUrl = '';
+        
+        // Image upload handler
+        document.getElementById('imageFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const uploadStatus = document.getElementById('uploadStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
+            };
+            reader.readAsDataURL(file);
+            
+            // Upload to server
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                submitBtn.disabled = true;
+                uploadStatus.textContent = '⏳ Uploading image...';
+                uploadStatus.className = 'upload-status';
+                uploadStatus.style.display = 'block';
+                
+                const response = await fetch('/upload-category-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    uploadedImageUrl = data.url;
+                    document.getElementById('imageUrl').value = data.url;
+                    uploadStatus.textContent = '✅ Image uploaded successfully!';
+                    uploadStatus.className = 'upload-status success';
+                } else {
+                    uploadStatus.textContent = '❌ Upload failed: ' + data.message;
+                    uploadStatus.className = 'upload-status error';
+                }
+            } catch (error) {
+                uploadStatus.textContent = '❌ Upload error: ' + error.message;
+                uploadStatus.className = 'upload-status error';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Form submission handler
+        document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                image: document.getElementById('imageUrl').value
+            };
+            
+            const categoryId = document.getElementById('categoryId').value;
+            const url = categoryId ? `/admin/categories/edit/${categoryId}` : '/admin/categories/add';
+            const method = 'POST';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    alert('Category saved successfully!');
+                    location.reload();
+                } else {
+                    const errorText = await response.text();
+                    alert('Error: Failed to save category. ' + errorText);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Add New Category';
-            document.getElementById('categoryForm').action = '/admin/categories/add';
             document.getElementById('categoryForm').reset();
             document.getElementById('categoryId').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('uploadStatus').style.display = 'none';
+            uploadedImageUrl = '';
             document.getElementById('categoryModal').classList.add('active');
         }
         
-        function openEditModal(categoryData) {
-            const category = JSON.parse(JSON.parse(categoryData));
+        function openEditModal(category) {
             document.getElementById('modalTitle').textContent = 'Edit Category';
-            document.getElementById('categoryForm').action = `/admin/categories/edit/${category._id}`;
-            
             document.getElementById('categoryId').value = category._id;
             document.getElementById('title').value = category.title;
-            document.getElementById('description').value = category.description;
-            document.getElementById('image').value = category.image || '';
+            document.getElementById('description').value = category.description || '';
             
+            if (category.image && category.image.url) {
+                document.getElementById('imageUrl').value = category.image.url;
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="${category.image.url}" style="max-width: 200px; border-radius: 8px;">`;
+                uploadedImageUrl = category.image.url;
+            }
+            
+            document.getElementById('uploadStatus').style.display = 'none';
             document.getElementById('categoryModal').classList.add('active');
         }
         
@@ -303,24 +381,24 @@
             document.getElementById('categoryModal').classList.remove('active');
         }
         
-        function deleteCategory(id) {
-            if (confirm('Are you sure you want to delete this category?')) {
-                fetch(`/admin/categories/${id}`, {
+        async function deleteCategory(id) {
+            if (!confirm('Are you sure you want to delete this category?')) return;
+            
+            try {
+                const response = await fetch(`/admin/categories/${id}`, {
                     method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Category deleted successfully');
-                        location.reload();
-                    } else {
-                        alert('Error deleting category');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting category');
                 });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Category deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Error: Failed to delete category');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
             }
         }
         

@@ -126,6 +126,22 @@
             cursor: pointer;
             color: #666;
         }
+        .upload-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .upload-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .upload-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -175,11 +191,15 @@
                         <tbody>
                             <% brands.forEach(brand => { %>
                                 <tr>
-                                    <td><img src="<%= brand.logo || '/images/placeholder.jpg' %>" alt="<%= brand.name %>" style="height: 50px; object-fit: contain;"></td>
+                                    <td>
+                                        <img src="<%= (brand.image && brand.image.url) ? brand.image.url : '/images/placeholder.jpg' %>" 
+                                             alt="<%= brand.name %>" 
+                                             style="height: 50px; width: 80px; object-fit: contain; border-radius: 5px;">
+                                    </td>
                                     <td><%= brand.name %></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <button onclick='openEditModal(<%= JSON.stringify(JSON.stringify(brand)) %>)' class="btn btn-small btn-edit">
+                                            <button onclick='openEditModal(<%= JSON.stringify(brand) %>)' class="btn btn-small btn-edit">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <button onclick="deleteBrand('<%= brand._id || brand.id %>')" class="btn btn-small btn-delete">
@@ -205,7 +225,7 @@
                 <h2 id="modalTitle">Add New Brand</h2>
                 <button class="close-modal" onclick="closeModal()">&times;</button>
             </div>
-            <form id="brandForm" action="/admin/brands/add" method="POST">
+            <form id="brandForm">
                 <input type="hidden" id="brandId" name="id">
                 
                 <div class="form-group">
@@ -214,56 +234,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="imageFile">Brand Logo *</label>
-                    <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                    <label for="imageFile">Brand Logo</label>
+                    <input type="file" id="imageFile" accept="image/*">
                     <small>Max size: 5MB. Formats: JPG, PNG, WebP</small>
-  
+                    
                     <!-- Preview -->
                     <div id="imagePreview" style="margin-top: 10px;"></div>
-  
+                    
+                    <!-- Upload Status -->
+                    <div id="uploadStatus" class="upload-status"></div>
+                    
                     <!-- Hidden field to store uploaded URL -->
-                    <input type="hidden" id="images" name="images">
+                    <input type="hidden" id="imageUrl" name="image">
                 </div>
-
-                <script>
-                // Image upload handler
-                document.getElementById('imageFile').addEventListener('change', async function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-  
-                    // Show preview
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('imagePreview').innerHTML = 
-                            `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
-                    };
-                    reader.readAsDataURL(file);
-  
-                // Upload to server
-                const formData = new FormData();
-                formData.append('image', file);
-  
-                try {
-                    const response = await fetch('/upload-product-image', {
-                        method: 'POST',
-                        body: formData
-                    });
-    
-                    const data = await response.json();
-    
-                    if (data.success) {
-                        document.getElementById('images').value = data.url;
-                        alert('Image uploaded successfully!');
-                    } else {
-                        alert('Upload failed: ' + data.message);
-                    }
-                } catch (error) {
-                    alert('Upload error: ' + error.message);
-                }
-                });
-                </script>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
                     <i class="fas fa-save"></i> Save Brand
                 </button>
             </form>
@@ -271,23 +256,115 @@
     </div>
     
     <script>
+        let uploadedImageUrl = '';
+        
+        // Image upload handler
+        document.getElementById('imageFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const uploadStatus = document.getElementById('uploadStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="${e.target.result}" style="max-width: 200px; border-radius: 8px;">`;
+            };
+            reader.readAsDataURL(file);
+            
+            // Upload to server
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                submitBtn.disabled = true;
+                uploadStatus.textContent = '⏳ Uploading logo...';
+                uploadStatus.className = 'upload-status';
+                uploadStatus.style.display = 'block';
+                
+                const response = await fetch('/upload-brand-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    uploadedImageUrl = data.url;
+                    document.getElementById('imageUrl').value = data.url;
+                    uploadStatus.textContent = '✅ Logo uploaded successfully!';
+                    uploadStatus.className = 'upload-status success';
+                } else {
+                    uploadStatus.textContent = '❌ Upload failed: ' + data.message;
+                    uploadStatus.className = 'upload-status error';
+                }
+            } catch (error) {
+                uploadStatus.textContent = '❌ Upload error: ' + error.message;
+                uploadStatus.className = 'upload-status error';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Form submission handler
+        document.getElementById('brandForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                image: document.getElementById('imageUrl').value
+            };
+            
+            const brandId = document.getElementById('brandId').value;
+            const url = brandId ? `/admin/brands/edit/${brandId}` : '/admin/brands/add';
+            const method = 'POST';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    alert('Brand saved successfully!');
+                    location.reload();
+                } else {
+                    const errorText = await response.text();
+                    alert('Error: Failed to save brand. ' + errorText);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Add New Brand';
-            document.getElementById('brandForm').action = '/admin/brands/add';
             document.getElementById('brandForm').reset();
             document.getElementById('brandId').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('uploadStatus').style.display = 'none';
+            uploadedImageUrl = '';
             document.getElementById('brandModal').classList.add('active');
         }
         
-        function openEditModal(brandData) {
-            const brand = JSON.parse(JSON.parse(brandData));
+        function openEditModal(brand) {
             document.getElementById('modalTitle').textContent = 'Edit Brand';
-            document.getElementById('brandForm').action = `/admin/brands/edit/${brand._id}`;
-            
             document.getElementById('brandId').value = brand._id;
             document.getElementById('name').value = brand.name;
-            document.getElementById('logo').value = brand.logo || '';
             
+            if (brand.image && brand.image.url) {
+                document.getElementById('imageUrl').value = brand.image.url;
+                document.getElementById('imagePreview').innerHTML = 
+                    `<img src="${brand.image.url}" style="max-width: 200px; border-radius: 8px;">`;
+                uploadedImageUrl = brand.image.url;
+            }
+            
+            document.getElementById('uploadStatus').style.display = 'none';
             document.getElementById('brandModal').classList.add('active');
         }
         
@@ -295,24 +372,24 @@
             document.getElementById('brandModal').classList.remove('active');
         }
         
-        function deleteBrand(id) {
-            if (confirm('Are you sure you want to delete this brand?')) {
-                fetch(`/admin/brands/${id}`, {
+        async function deleteBrand(id) {
+            if (!confirm('Are you sure you want to delete this brand?')) return;
+            
+            try {
+                const response = await fetch(`/admin/brands/${id}`, {
                     method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Brand deleted successfully');
-                        location.reload();
-                    } else {
-                        alert('Error deleting brand');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting brand');
                 });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Brand deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Error: Failed to delete brand');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
             }
         }
         
