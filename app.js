@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import multer from 'multer';
 import FormData from 'form-data';
+import MongoStore from 'connect-mongo';
 
 dotenv.config();
 
