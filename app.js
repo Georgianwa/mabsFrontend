@@ -55,7 +55,9 @@ app.use(
       httpOnly: true,
       sameSite: 'lax',
     },
-    name: 'sessionId'
+    name: 'sessionId',
+    rolling: true,
+    proxy
   })
 );
 
