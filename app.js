@@ -65,7 +65,7 @@ app.use(
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Auth middleware - FIXED: Check both session and token
+// Auth middleware
 function isAdmin(req, res, next) {
   if (req.session.isAdmin && req.session.adminToken) {
     next();
@@ -190,25 +190,36 @@ const getFeaturedProducts = (products) =>
 // Home
 app.get('/', async (req, res) => {
   try {
-    const [products, categories, brands] = await Promise.all([
+    const [productsRes, categoriesRes, brandsRes] = await Promise.all([
       apiService.get('/products', req),
       apiService.get('/categories', req),
       apiService.get('/brands', req),
     ]);
 
-    const featuredProducts = getFeaturedProducts(products?.products || []);
-    const brandList = Array.isArray(brands)
-      ? brands.slice(0, 6)
-      : brands?.brands?.slice(0, 6) || [];
-    const categoryList = Array.isArray(categories)
-      ? categories
-      : categories?.categories || [];
+    console.log('Home - Products response:', productsRes);
+    console.log('Home - Categories response:', categoriesRes);
+    console.log('Home - Brands response:', brandsRes);
+
+    // Handle different response structures
+    const productList = Array.isArray(productsRes) 
+      ? productsRes 
+      : (productsRes?.products || []);
+    
+    const categoryList = Array.isArray(categoriesRes) 
+      ? categoriesRes 
+      : (categoriesRes?.categories || []);
+    
+    const brandList = Array.isArray(brandsRes) 
+      ? brandsRes 
+      : (brandsRes?.brands || []);
+
+    const featuredProducts = getFeaturedProducts(productList);
 
     res.render('index', {
       title: 'Home - Mabs Electronics',
       categories: categoryList,
       featuredProducts,
-      brands: brandList,
+      brands: brandList.slice(0, 6),
     });
   } catch (error) {
     console.error('Error loading homepage:', error);
@@ -222,10 +233,14 @@ app.get('/', async (req, res) => {
 // Products page
 app.get('/products', async (req, res) => {
   try {
-    const products = await apiService.get('/products', req);
+    const productsRes = await apiService.get('/products', req);
+    const productList = Array.isArray(productsRes) 
+      ? productsRes 
+      : (productsRes?.products || []);
+    
     res.render('products', {
       title: 'All Products',
-      products: products?.products || [],
+      products: productList,
     });
   } catch (err) {
     console.error('Error loading products:', err);
@@ -236,18 +251,28 @@ app.get('/products', async (req, res) => {
   }
 });
 
-// Single product
+// Single product - FIXED
 app.get('/product/:id', async (req, res) => {
   try {
     const product = await apiService.get(`/products/${req.params.id}`, req);
-    if (!product)
+    
+    if (!product) {
       return res.status(404).render('404', { 
         title: 'Not Found', 
         message: 'Product not found.' 
       });
+    }
+
+    // Get related products (same category)
+    const relatedProductsRes = await apiService.get(`/products?category=${product.category._id || product.category}`, req);
+    const relatedProducts = (Array.isArray(relatedProductsRes) ? relatedProductsRes : relatedProductsRes?.products || [])
+      .filter(p => p._id !== product._id)
+      .slice(0, 4);
+
     res.render('product', { 
-      title: product.title, 
-      product 
+      title: product.name, 
+      product,
+      relatedProducts
     });
   } catch (err) {
     console.error('Error loading product:', err);
@@ -261,8 +286,11 @@ app.get('/product/:id', async (req, res) => {
 // Categories page
 app.get('/categories', async (req, res) => {
   try {
-    const categories = await apiService.get('/categories', req);
-    const categoryList = categories?.categories || categories || [];
+    const categoriesRes = await apiService.get('/categories', req);
+    const categoryList = Array.isArray(categoriesRes) 
+      ? categoriesRes 
+      : (categoriesRes?.categories || []);
+    
     res.render('categories', {
       title: 'Categories',
       categories: categoryList,
@@ -276,13 +304,29 @@ app.get('/categories', async (req, res) => {
   }
 });
 
-// Products by category
+// Products by category - FIXED
 app.get('/category/:id', async (req, res) => {
   try {
-    const products = await apiService.get(`/products/category/${req.params.id}`, req);
+    // First get the category details
+    const category = await apiService.get(`/categories/${req.params.id}`, req);
+    
+    if (!category) {
+      return res.status(404).render('404', { 
+        title: 'Not Found', 
+        message: 'Category not found.' 
+      });
+    }
+
+    // Then get products for this category
+    const productsRes = await apiService.get(`/products?category=${req.params.id}`, req);
+    const productList = Array.isArray(productsRes) 
+      ? productsRes 
+      : (productsRes?.products || []);
+
     res.render('category', {
-      title: 'Category Products',
-      products: products?.products || products || [],
+      title: `${category.title} - Products`,
+      category,
+      products: productList,
     });
   } catch (err) {
     console.error('Error loading category:', err);
@@ -296,20 +340,30 @@ app.get('/category/:id', async (req, res) => {
 // Brands page
 app.get('/brands', async (req, res) => {
   try {
-    const [brands, products] = await Promise.all([
+    const [brandsRes, productsRes] = await Promise.all([
       apiService.get('/brands', req),
       apiService.get('/products', req),
     ]);
 
-    const brandList = Array.isArray(brands) ? brands : brands?.brands || [];
-    const productList = Array.isArray(products) ? products : products?.products || [];
+    const brandList = Array.isArray(brandsRes) 
+      ? brandsRes 
+      : (brandsRes?.brands || []);
+    
+    const productList = Array.isArray(productsRes) 
+      ? productsRes 
+      : (productsRes?.products || []);
 
+    // Group products by brand
     const brandProducts = {};
     brandList.forEach((brand) => {
       const brandId = brand._id || brand.id;
       const brandName = brand.name;
       
-      const filtered = productList.filter((p) => p.brand === brandName);
+      // Match products by brand ObjectId
+      const filtered = productList.filter((p) => {
+        const productBrandId = p.brand?._id || p.brand;
+        return productBrandId === brandId || p.brand?.name === brandName;
+      });
       
       brandProducts[brandId] = filtered;
       brandProducts[brandName] = filtered;
@@ -329,6 +383,39 @@ app.get('/brands', async (req, res) => {
   }
 });
 
+// Single brand page - FIXED (NEW ROUTE)
+app.get('/brand/:id', async (req, res) => {
+  try {
+    // Get brand details
+    const brand = await apiService.get(`/brands/${req.params.id}`, req);
+    
+    if (!brand) {
+      return res.status(404).render('404', { 
+        title: 'Not Found', 
+        message: 'Brand not found.' 
+      });
+    }
+
+    // Get products for this brand
+    const productsRes = await apiService.get(`/products?brand=${req.params.id}`, req);
+    const productList = Array.isArray(productsRes) 
+      ? productsRes 
+      : (productsRes?.products || []);
+
+    res.render('brand', {
+      title: `${brand.name} - Products`,
+      brand,
+      products: productList,
+    });
+  } catch (err) {
+    console.error('Error loading brand:', err);
+    res.status(500).render('500', { 
+      title: 'Error', 
+      message: 'Unable to load brand. Please try again later.' 
+    });
+  }
+});
+
 // About, Cart, Search, Contact
 app.get('/about', (req, res) => {
   res.render('about', { title: 'About Us' });
@@ -342,8 +429,10 @@ app.get('/cart', (req, res) => {
 app.get('/search', async (req, res) => {
   const q = req.query.q || '';
   try {
-    const results = await apiService.get(`/products?search=${q}`, req);
-    const searchResults = Array.isArray(results) ? results : results?.products || [];
+    const resultsRes = await apiService.get(`/products?search=${q}`, req);
+    const searchResults = Array.isArray(resultsRes) 
+      ? resultsRes 
+      : (resultsRes?.products || []);
     
     res.render('search', {
       title: `Search results for "${q}"`,
@@ -430,7 +519,6 @@ app.post(
       const { username, password } = req.body;
 
       console.log(`🔐 Attempting login for: ${username}`);
-      console.log(`📡 API URL: ${API_BASE_URL}/admin/login`);
 
       const backendRes = await axios.post(
         `${API_BASE_URL}/admin/login`,
@@ -448,7 +536,6 @@ app.post(
       req.session.isAdmin = true;
       req.session.adminUsername = username;
 
-      // Force session save and redirect
       await new Promise((resolve, reject) => {
         req.session.save((err) => {
           if (err) {
@@ -461,19 +548,13 @@ app.post(
         });
       });
       
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-        }
-        console.log(`✅ Session saved, redirecting to dashboard`);
-        res.redirect('/admin/dashboard');
-      });
+      res.redirect('/admin/dashboard');
       
     } catch (err) {
       console.error('❌ Admin login error:', err.response?.data || err.message);
       res.render('adminLogin', {
         title: 'Admin Login',
-        error: err.response?.data?.message || 'Invalid username or password. Please check your credentials.',
+        error: err.response?.data?.message || 'Invalid username or password.',
       });
     }
   }
@@ -487,38 +568,16 @@ app.get('/admin/logout', (req, res) => {
 });
 
 app.get('/admin/dashboard', isAdmin, async (req, res) => {
-  console.log('📊 Dashboard accessed');
-  console.log('Session ID:', req.sessionID);
-  console.log('Session data:', JSON.stringify(req.session));
-  console.log('Is Admin:', req.session?.isAdmin);
-  console.log('Admin username:', req.session?.adminUsername);
-  console.log('Admin token:', req.session?.adminToken)
-  
-  if (!req.session || !req.session.isAdmin) {
-    console.log('❌ No valid session, redirecting to login');
-    return res.redirect('/admin/login');
-  }
-
-  console.log('✅ Authenticated, fetching data...');
-  
   try {
-    const [products, categories, brands] = await Promise.all([
+    const [productsRes, categoriesRes, brandsRes] = await Promise.all([
       apiService.get('/products', req),
       apiService.get('/categories', req),
       apiService.get('/brands', req),
     ]);
 
-    console.log('Products response:', products ? 'received' : 'null');
-    console.log('Categories response:', categories ? 'received' : 'null');
-    console.log('Brands response:', brands ? 'received' : 'null');
-
-    const productList = Array.isArray(products) ? products : products?.products || [];
-    const categoryList = Array.isArray(categories) ? categories : categories?.categories || [];
-    const brandList = Array.isArray(brands) ? brands : brands?.brands || [];
-
-    console.log('Product count:', productList.length);
-    console.log('Category count:', categoryList.length);
-    console.log('Brand count:', brandList.length);
+    const productList = Array.isArray(productsRes) ? productsRes : productsRes?.products || [];
+    const categoryList = Array.isArray(categoriesRes) ? categoriesRes : categoriesRes?.categories || [];
+    const brandList = Array.isArray(brandsRes) ? brandsRes : brandsRes?.brands || [];
 
     const stats = {
       totalProducts: productList.length,
@@ -526,8 +585,6 @@ app.get('/admin/dashboard', isAdmin, async (req, res) => {
       totalBrands: brandList.length,
       featuredProducts: productList.filter((p) => p.featured).length,
     };
-
-    console.log('✅ Rendering dashboard');
 
     res.render('adminDashboard', {
       title: 'Admin Dashboard',
@@ -545,7 +602,7 @@ app.get('/admin/dashboard', isAdmin, async (req, res) => {
 
 app.get('/admin/products', isAdmin, async (req, res) => {
   try {
-    const [products, categories, brands] = await Promise.all([
+    const [productsRes, categoriesRes, brandsRes] = await Promise.all([
       apiService.get('/products', req),
       apiService.get('/categories', req),
       apiService.get('/brands', req),
@@ -553,9 +610,9 @@ app.get('/admin/products', isAdmin, async (req, res) => {
 
     res.render('adminProducts', {
       title: 'Manage Products',
-      products: Array.isArray(products) ? products : products?.products || [],
-      categories: Array.isArray(categories) ? categories : categories?.categories || [],
-      brands: Array.isArray(brands) ? brands : brands?.brands || [],
+      products: Array.isArray(productsRes) ? productsRes : productsRes?.products || [],
+      categories: Array.isArray(categoriesRes) ? categoriesRes : categoriesRes?.categories || [],
+      brands: Array.isArray(brandsRes) ? brandsRes : brandsRes?.brands || [],
       message: req.query.message || null,
     });
   } catch (err) {
@@ -579,7 +636,7 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
       price: parseFloat(req.body.price),
       description: req.body.description,
       featured: req.body.featured === true || req.body.featured === 'true',
-      images: req.body.images, // Don't wrap in array here, backend will handle it
+      images: req.body.images,
       specifications: req.body.specifications || {},
     };
 
@@ -589,7 +646,6 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
     
     console.log('✅ Product added:', result);
     
-    // Return JSON response for AJAX request
     res.json({ 
       success: true, 
       message: 'Product added successfully',
@@ -598,7 +654,6 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error adding product:', error.response?.data || error.message);
-    console.error('Full error:', error);
     
     res.status(500).json({ 
       success: false,
@@ -609,10 +664,6 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
 
 app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
   try {
-    console.log('📝 Frontend: Editing product...');
-    console.log('Product ID:', req.params.id);
-    console.log('Request body:', req.body);
-    
     const productData = {
       name: req.body.name,
       brand: req.body.brand,
@@ -625,8 +676,6 @@ app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
     };
 
     const result = await apiService.put(`/products/${req.params.id}`, productData, req);
-    
-    console.log('✅ Product updated:', result);
     
     res.json({ 
       success: true, 
@@ -656,8 +705,8 @@ app.delete('/admin/products/:id', isAdmin, async (req, res) => {
 
 app.get('/admin/categories', isAdmin, async (req, res) => {
   try {
-    const categories = await apiService.get('/categories', req);
-    const categoryList = Array.isArray(categories) ? categories : categories?.categories || [];
+    const categoriesRes = await apiService.get('/categories', req);
+    const categoryList = Array.isArray(categoriesRes) ? categoriesRes : categoriesRes?.categories || [];
     
     res.render('adminCategories', {
       title: 'Manage Categories',
@@ -711,8 +760,8 @@ app.delete('/admin/categories/:id', isAdmin, async (req, res) => {
 
 app.get('/admin/brands', isAdmin, async (req, res) => {
   try {
-    const brands = await apiService.get('/brands', req);
-    const brandList = Array.isArray(brands) ? brands : brands?.brands || [];
+    const brandsRes = await apiService.get('/brands', req);
+    const brandList = Array.isArray(brandsRes) ? brandsRes : brandsRes?.brands || [];
     
     res.render('adminBrands', {
       title: 'Manage Brands',
@@ -765,9 +814,7 @@ app.delete('/admin/brands/:id', isAdmin, async (req, res) => {
 });
 
 // ===== IMAGE UPLOAD ROUTES =====
-// ✅ FIXED: Now routes to correct backend API endpoints
 
-// Upload product image
 app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -782,7 +829,7 @@ app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, r
 
     const token = apiService.getToken(req);
     const response = await axios.post(
-      `${API_BASE_URL}/upload/product`,  // ✅ FIXED: Correct endpoint
+      `${API_BASE_URL}/upload/product`,
       formData,
       {
         headers: {
@@ -802,7 +849,6 @@ app.post('/upload-product-image', isAdmin, upload.single('image'), async (req, r
   }
 });
 
-// Upload category image
 app.post('/upload-category-image', isAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -817,7 +863,7 @@ app.post('/upload-category-image', isAdmin, upload.single('image'), async (req, 
 
     const token = apiService.getToken(req);
     const response = await axios.post(
-      `${API_BASE_URL}/upload/category`,  // ✅ Category endpoint
+      `${API_BASE_URL}/upload/category`,
       formData,
       {
         headers: {
@@ -837,7 +883,6 @@ app.post('/upload-category-image', isAdmin, upload.single('image'), async (req, 
   }
 });
 
-// Upload brand logo
 app.post('/upload-brand-image', isAdmin, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -852,7 +897,7 @@ app.post('/upload-brand-image', isAdmin, upload.single('image'), async (req, res
 
     const token = apiService.getToken(req);
     const response = await axios.post(
-      `${API_BASE_URL}/upload/brand`,  // ✅ Brand endpoint
+      `${API_BASE_URL}/upload/brand`,
       formData,
       {
         headers: {
@@ -867,7 +912,7 @@ app.post('/upload-brand-image', isAdmin, upload.single('image'), async (req, res
     console.error('Upload error:', error.response?.data || error.message);
     res.json({ 
       success: false, 
-      message: error.response?.data||error.message 
+      message: error.response?.data?.message || error.message 
     });
   }
 });

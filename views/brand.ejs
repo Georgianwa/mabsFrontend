@@ -3,7 +3,25 @@
 <main class="brand-page">
     <div class="page-header">
         <div class="container">
-            <img src="<%= brand.logo %>" alt="<%= brand.name %>" style="max-height: 100px; margin: 0 auto 20px;">
+            <% 
+            let logoUrl = '';
+            if (brand.image) {
+                if (typeof brand.image === 'object' && brand.image.url) {
+                    logoUrl = brand.image.url;
+                } else if (typeof brand.image === 'string') {
+                    logoUrl = brand.image;
+                }
+            } else if (brand.logo) {
+                if (typeof brand.logo === 'object' && brand.logo.url) {
+                    logoUrl = brand.logo.url;
+                } else if (typeof brand.logo === 'string') {
+                    logoUrl = brand.logo;
+                }
+            }
+            %>
+            <% if (logoUrl) { %>
+                <img src="<%= logoUrl %>" alt="<%= brand.name %>" style="max-height: 100px; margin: 0 auto 20px;">
+            <% } %>
             <h1><%= brand.name %></h1>
             <p><%= products.length %> products available</p>
         </div>
@@ -16,20 +34,28 @@
                     <% products.forEach(product => { %>
                         <div class="product-card">
                             <div class="product-image">
-                                <a href="/product/<%= product._id %>">
-                                    <img src="<%= product.images[0] %>" alt="<%= product.name %>">
+                                <a href="/product/<%= product._id || product.id %>">
+                                    <% 
+                                    let imageUrl = '';
+                                    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                                        imageUrl = product.images[0];
+                                    } else if (product.images && typeof product.images === 'string') {
+                                        imageUrl = product.images;
+                                    }
+                                    %>
+                                    <img src="<%= imageUrl || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
                                 </a>
                                 <% if (product.featured) { %>
                                     <span class="badge">Featured</span>
                                 <% } %>
                             </div>
                             <div class="product-info">
-                                <p class="product-brand"><%= product.brand %></p>
+                                <p class="product-brand"><%= product.brand?.name || product.brand %></p>
                                 <h3 class="product-name">
-                                    <a href="/product/<%= product._id %>"><%= product.name %></a>
+                                    <a href="/product/<%= product._id || product.id %>"><%= product.name %></a>
                                 </h3>
-                                <p class="product-price">₦<%= product.price.toLocaleString() %></p>
-                                <a href="/product/<%= product._id %>" class="btn btn-outline">View Details</a>
+                                <p class="product-price">₦<%= product.price ? product.price.toLocaleString() : '0' %></p>
+                                <a href="/product/<%= product._id || product.id %>" class="btn btn-outline">View Details</a>
                             </div>
                         </div>
                     <% }); %>

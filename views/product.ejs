@@ -1,32 +1,49 @@
-
 <%- include('partials/header') %>
 
 <main class="product-page">
     <div class="container">
         <div class="breadcrumb">
-            <a href="/">Home</a> / <a href="/categories">Categories</a> / <a href="/category/<%= product.category %>">Category</a> / <span><%= product.name %></span>
+            <a href="/">Home</a> / 
+            <a href="/categories">Categories</a> / 
+            <% if (product.category) { %>
+                <a href="/category/<%= product.category._id || product.category %>">
+                    <%= product.category.title || 'Category' %>
+                </a> / 
+            <% } %>
+            <span><%= product.name %></span>
         </div>
         
         <div class="product-detail">
             <div class="product-gallery">
                 <div class="main-image">
-                    <img src="<%= product.images[0] %>" alt="<%= product.name %>" id="main-product-image">
+                    <% 
+                    let mainImageUrl = '';
+                    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                        mainImageUrl = product.images[0];
+                    } else if (product.images && typeof product.images === 'string') {
+                        mainImageUrl = product.images;
+                    }
+                    %>
+                    <img src="<%= mainImageUrl || '/images/placeholder.jpg' %>" alt="<%= product.name %>" id="main-product-image">
                 </div>
-                <% if (product.images.length > 1) { %>
+                <% if (product.images && Array.isArray(product.images) && product.images.length > 1) { %>
                     <div class="thumbnail-images">
                         <% product.images.forEach((image, index) => { %>
-                            <img src="<%= image %>" alt="<%= product.name %>" class="<%= index === 0 ? 'active' : '' %>" onclick="changeImage('<%= image %>')">
+                            <img src="<%= image %>" 
+                                 alt="<%= product.name %>" 
+                                 class="<%= index === 0 ? 'active' : '' %>" 
+                                 onclick="changeImage('<%= image %>')">
                         <% }); %>
                     </div>
                 <% } %>
             </div>
             
             <div class="product-details">
-                <p class="product-brand"><%= product.brand %></p>
+                <p class="product-brand"><%= product.brand?.name || product.brand %></p>
                 <h1><%= product.name %></h1>
                 
                 <div class="product-price-section">
-                    <p class="product-price">NGN<%= product.price.toFixed(2) %></p>
+                    <p class="product-price">₦<%= product.price ? product.price.toLocaleString() : '0' %></p>
                 </div>
                 
                 <div class="product-description">
@@ -35,48 +52,74 @@
                 </div>
                 
                 <div class="product-actions">
-                    <a href="/" class="btn btn-primary">Add to Cart</a>
+                    <button class="btn btn-primary" onclick="addToCart('<%= product._id || product.id %>')">
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
                 </div>
                 
                 <div class="product-meta">
-                    <p><strong>Category:</strong> <%= product.category %></p>
-                    <p><strong>Brand:</strong> <%= product.brand %></p>
-                    <p><strong>Product ID:</strong> <%= product.id %></p>
+                    <% if (product.category) { %>
+                        <p><strong>Category:</strong> <%= product.category.title || product.category %></p>
+                    <% } %>
+                    <% if (product.brand) { %>
+                        <p><strong>Brand:</strong> <%= product.brand.name || product.brand %></p>
+                    <% } %>
+                    <p><strong>Product ID:</strong> <%= product._id || product.id %></p>
                 </div>
             </div>
         </div>
         
-        <div class="product-specifications">
-            <h[[]
-            2>Specifications</h2>
-            <div class="specs-grid">
-                <% Object.entries(product.specifications).forEach(([key, value]) => { %>
-                    <div class="spec-item">
-                        <strong><%= key %>:</strong>
-                        <span><%= value %></span>
-                    </div>
-                <% }); %>
+        <% if (product.productSpecifications && Object.keys(product.productSpecifications).length > 0) { %>
+            <div class="product-specifications">
+                <h2>Specifications</h2>
+                <div class="specs-grid">
+                    <% 
+                    const specs = product.productSpecifications;
+                    if (specs instanceof Map) {
+                        for (const [key, value] of specs) { %>
+                            <div class="spec-item">
+                                <strong><%= key %>:</strong>
+                                <span><%= value %></span>
+                            </div>
+                        <% }
+                    } else {
+                        for (const [key, value] of Object.entries(specs)) { %>
+                            <div class="spec-item">
+                                <strong><%= key %>:</strong>
+                                <span><%= value %></span>
+                            </div>
+                        <% }
+                    } %>
+                </div>
             </div>
-        </div>
+        <% } %>
         
-        <% if (relatedProducts.length > 0) { %>
+        <% if (typeof relatedProducts !== 'undefined' && relatedProducts && relatedProducts.length > 0) { %>
             <section class="related-products">
                 <h2>Related Products</h2>
                 <div class="products-grid">
                     <% relatedProducts.forEach(relatedProduct => { %>
                         <div class="product-card">
                             <div class="product-image">
-                                <a href="/product/<%= relatedProduct.id %>">
-                                    <img src="<%= relatedProduct.images[0] %>" alt="<%= relatedProduct.name %>">
+                                <a href="/product/<%= relatedProduct._id || relatedProduct.id %>">
+                                    <% 
+                                    let relatedImageUrl = '';
+                                    if (relatedProduct.images && Array.isArray(relatedProduct.images) && relatedProduct.images.length > 0) {
+                                        relatedImageUrl = relatedProduct.images[0];
+                                    } else if (relatedProduct.images && typeof relatedProduct.images === 'string') {
+                                        relatedImageUrl = relatedProduct.images;
+                                    }
+                                    %>
+                                    <img src="<%= relatedImageUrl || '/images/placeholder.jpg' %>" alt="<%= relatedProduct.name %>">
                                 </a>
                             </div>
                             <div class="product-info">
-                                <p class="product-brand"><%= relatedProduct.brand %></p>
+                                <p class="product-brand"><%= relatedProduct.brand?.name || relatedProduct.brand %></p>
                                 <h3 class="product-name">
-                                    <a href="/product/<%= relatedProduct.id %>"><%= relatedProduct.name %></a>
+                                    <a href="/product/<%= relatedProduct._id || relatedProduct.id %>"><%= relatedProduct.name %></a>
                                 </h3>
-                                <p class="product-price">$<%= relatedProduct.price.toFixed(2) %></p>
-                                <a href="/product/<%= relatedProduct.id %>" class="btn btn-outline">View Details</a>
+                                <p class="product-price">₦<%= relatedProduct.price ? relatedProduct.price.toLocaleString() : '0' %></p>
+                                <a href="/product/<%= relatedProduct._id || relatedProduct.id %>" class="btn btn-outline">View Details</a>
                             </div>
                         </div>
                     <% }); %>
@@ -95,6 +138,12 @@ function changeImage(imageSrc) {
             img.classList.add('active');
         }
     });
+}
+
+function addToCart(productId) {
+    // Add to cart functionality
+    alert('Product added to cart! (Feature coming soon)');
+    // TODO: Implement actual cart functionality
 }
 </script>
 
