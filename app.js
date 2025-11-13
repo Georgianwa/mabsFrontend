@@ -57,7 +57,7 @@ app.use(
     },
     name: 'sessionId',
     rolling: true,
-    proxy
+    proxy: true
   })
 );
 
