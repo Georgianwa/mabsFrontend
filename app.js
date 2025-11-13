@@ -40,13 +40,21 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: "sessions",
+      ttl: 24 * 60 * 60
+    }),
     cookie: { 
       secure: process.env.NODE_ENV === 'production', 
-      maxAge: 24 * 60 * 60 * 1000 
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: 'lax',
     },
+    name: 'sessionId'
   })
 );
 
@@ -436,6 +444,19 @@ app.post(
       req.session.adminToken = token;
       req.session.isAdmin = true;
       req.session.adminUsername = username;
+
+      // Force session save and redirect
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save error:', err);
+            reject(err);
+          } else {
+            console.log(`✅ Session saved for ${username}`);
+            resolve();
+          }
+        });
+      });
       
       req.session.save((err) => {
         if (err) {
@@ -464,13 +485,17 @@ app.get('/admin/logout', (req, res) => {
 
 app.get('/admin/dashboard', isAdmin, async (req, res) => {
   console.log('📊 Dashboard accessed');
-  console.log('Session:', req.session);
-  console.log('Is Admin?', req.session.isAdmin);
+  console.log('Session ID:', req.sessionID);
+  console.log('Session data:', req.session);
+  console.log('Is Admin:', req.session?.isAdmin);
+  console.log('Admin username:', req.session?.adminUsername);
   
-  if (!req.session.isAdmin) {
-    console.log('❌ Not authenticated, redirecting to login');
+  if (!req.session || !req.session.isAdmin) {
+    console.log('❌ No valid session, redirecting to login');
     return res.redirect('/admin/login');
   }
+
+  console.log('✅ Valid session, rendering dashboard');
   
   try {
     const [products, categories, brands] = await Promise.all([
