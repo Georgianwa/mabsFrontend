@@ -569,45 +569,77 @@ app.get('/admin/products', isAdmin, async (req, res) => {
 
 app.post('/admin/products/add', isAdmin, async (req, res) => {
   try {
+    console.log('📝 Frontend: Adding product...');
+    console.log('Request body:', req.body);
+    
     const productData = {
       name: req.body.name,
       brand: req.body.brand,
       category: req.body.category,
       price: parseFloat(req.body.price),
       description: req.body.description,
-      featured: req.body.featured === 'on',
-      images: [req.body.images],
-      specifications: req.body.specifications ? JSON.parse(req.body.specifications) : {},
+      featured: req.body.featured === true || req.body.featured === 'true',
+      images: req.body.images, // Don't wrap in array here, backend will handle it
+      specifications: req.body.specifications || {},
     };
 
-    await apiService.post('/products', productData, req);
-    res.redirect('/admin/products?message=Product added successfully');
+    console.log('Sending to backend:', productData);
+    
+    const result = await apiService.post('/products', productData, req);
+    
+    console.log('✅ Product added:', result);
+    
+    // Return JSON response for AJAX request
+    res.json({ 
+      success: true, 
+      message: 'Product added successfully',
+      data: result
+    });
+    
   } catch (error) {
-    console.error('Error adding product:', error.response?.data || error.message);
-    res.status(500).render('500', { 
-      title: 'Error', 
-      message: 'Unable to add product: ' + (error.response?.data?.message || error.message)
+    console.error('❌ Error adding product:', error.response?.data || error.message);
+    console.error('Full error:', error);
+    
+    res.status(500).json({ 
+      success: false,
+      message: error.response?.data?.message || error.message || 'Unable to add product'
     });
   }
 });
 
 app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
   try {
+    console.log('📝 Frontend: Editing product...');
+    console.log('Product ID:', req.params.id);
+    console.log('Request body:', req.body);
+    
     const productData = {
-      ...req.body,
+      name: req.body.name,
+      brand: req.body.brand,
+      category: req.body.category,
       price: parseFloat(req.body.price),
-      featured: req.body.featured === 'on',
-      images: [req.body.images],
-      specifications: req.body.specifications ? JSON.parse(req.body.specifications) : {},
+      description: req.body.description,
+      featured: req.body.featured === true || req.body.featured === 'true',
+      images: req.body.images,
+      specifications: req.body.specifications || {},
     };
 
-    await apiService.put(`/products/${req.params.id}`, productData, req);
-    res.redirect('/admin/products?message=Product updated successfully');
+    const result = await apiService.put(`/products/${req.params.id}`, productData, req);
+    
+    console.log('✅ Product updated:', result);
+    
+    res.json({ 
+      success: true, 
+      message: 'Product updated successfully',
+      data: result
+    });
+    
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).render('500', { 
-      title: 'Error', 
-      message: 'Unable to update product. Please try again later.' 
+    console.error('❌ Error updating product:', error.response?.data || error.message);
+    
+    res.status(500).json({ 
+      success: false,
+      message: error.response?.data?.message || error.message || 'Unable to update product'
     });
   }
 });

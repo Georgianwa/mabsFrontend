@@ -242,7 +242,7 @@
         // Form submission handler
         document.getElementById('productForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+    
             const formData = {
                 name: document.getElementById('name').value,
                 brand: document.getElementById('brand').value,
@@ -252,33 +252,52 @@
                 images: document.getElementById('imageUrl').value,
                 featured: document.getElementById('featured').checked,
                 specifications: document.getElementById('specifications').value ? 
-                    JSON.parse(document.getElementById('specifications').value) : {}
-            };
-            
+                JSON.parse(document.getElementById('specifications').value) : {}
+       };
+    
             const productId = document.getElementById('productId').value;
             const url = productId ? `/admin/products/edit/${productId}` : '/admin/products/add';
             const method = 'POST';
-            
+    
+            console.log('Submitting product data:', formData); // Debug log
+    
             try {
                 const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    alert('Product saved successfully!');
-                    location.reload();
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+        
+            console.log('Response status:', response.status); // Debug log
+        
+        // Check if response is JSON or HTML
+            const contentType = response.headers.get('content-type');
+        
+            if (response.ok) {
+                alert('Product saved successfully!');
+                window.location.href = '/admin/products';
+            } else {
+                let errorMessage = 'Failed to save product.';
+            
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMessage += ' ' + (errorData.message || JSON.stringify(errorData));
                 } else {
                     const errorText = await response.text();
-                    alert('Error: Failed to save product. ' + errorText);
+                // Extract just the error message, not the whole HTML
+                    errorMessage += ' Please check the console for details.';
+                    console.error('Error response:', errorText);
                 }
-            } catch (error) {
-                alert('Error: ' + error.message);
+            
+                alert('Error: ' + errorMessage);
             }
-        });
+        } catch (error) {
+            console.error('Error details:', error);
+            alert('Error: ' + error.message);
+       }
+    });
         
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Add New Product';
