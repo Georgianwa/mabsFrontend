@@ -20,6 +20,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const API_BASE_URL = process.env.API_BASE_URL;
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Multer configuration for image uploads
 const storage = multer.memoryStorage();
 const upload = multer({ 
@@ -82,6 +84,9 @@ const apiService = {
 
   async get(endpoint, req, headers = {}) {
     try {
+
+      await delay(100);
+
       const config = {
         headers: {
           'Content-Type': 'application/json',
@@ -97,6 +102,13 @@ const apiService = {
       const res = await axios.get(`${API_BASE_URL}${endpoint}`, config);
       return res.data;
     } catch (err) {
+      
+       if (err.response?.status === 429) {
+        console.error(`⚠️ Rate limited on ${endpoint}, retrying in 2s...`);
+        await delay(2000);
+        return this.get(endpoint, req, headers); // Retry once
+      }
+
       console.error(`GET ${endpoint} error:`, err.response?.data || err.message);
       if (err.response?.status === 401 && req) {
         req.session.destroy();
