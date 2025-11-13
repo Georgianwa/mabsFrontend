@@ -463,6 +463,15 @@ app.get('/admin/logout', (req, res) => {
 });
 
 app.get('/admin/dashboard', isAdmin, async (req, res) => {
+  console.log('📊 Dashboard accessed');
+  console.log('Session:', req.session);
+  console.log('Is Admin?', req.session.isAdmin);
+  
+  if (!req.session.isAdmin) {
+    console.log('❌ Not authenticated, redirecting to login');
+    return res.redirect('/admin/login');
+  }
+  
   try {
     const [products, categories, brands] = await Promise.all([
       apiService.get('/products', req),
