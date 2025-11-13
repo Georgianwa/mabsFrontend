@@ -74,7 +74,7 @@ function isAdmin(req, res, next) {
   }
 }
 
-// ===== API SERVICE - FIXED: Persist token from session =====
+// ===== API SERVICE =====
 const apiService = {
   getToken(req) {
     return req.session.adminToken || null;
@@ -489,16 +489,17 @@ app.get('/admin/logout', (req, res) => {
 app.get('/admin/dashboard', isAdmin, async (req, res) => {
   console.log('📊 Dashboard accessed');
   console.log('Session ID:', req.sessionID);
-  console.log('Session data:', req.session);
+  console.log('Session data:', JSON.stringify(req.session));
   console.log('Is Admin:', req.session?.isAdmin);
   console.log('Admin username:', req.session?.adminUsername);
+  console.log('Admin token:', req.session?.adminToken)
   
   if (!req.session || !req.session.isAdmin) {
     console.log('❌ No valid session, redirecting to login');
     return res.redirect('/admin/login');
   }
 
-  console.log('✅ Valid session, rendering dashboard');
+  console.log('✅ Authenticated, fetching data...');
   
   try {
     const [products, categories, brands] = await Promise.all([
@@ -507,9 +508,17 @@ app.get('/admin/dashboard', isAdmin, async (req, res) => {
       apiService.get('/brands', req),
     ]);
 
+    console.log('Products response:', products ? 'received' : 'null');
+    console.log('Categories response:', categories ? 'received' : 'null');
+    console.log('Brands response:', brands ? 'received' : 'null');
+
     const productList = Array.isArray(products) ? products : products?.products || [];
     const categoryList = Array.isArray(categories) ? categories : categories?.categories || [];
     const brandList = Array.isArray(brands) ? brands : brands?.brands || [];
+
+    console.log('Product count:', productList.length);
+    console.log('Category count:', categoryList.length);
+    console.log('Brand count:', brandList.length);
 
     const stats = {
       totalProducts: productList.length,
@@ -517,6 +526,8 @@ app.get('/admin/dashboard', isAdmin, async (req, res) => {
       totalBrands: brandList.length,
       featuredProducts: productList.filter((p) => p.featured).length,
     };
+
+    console.log('✅ Rendering dashboard');
 
     res.render('adminDashboard', {
       title: 'Admin Dashboard',

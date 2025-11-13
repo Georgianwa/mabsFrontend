@@ -7,18 +7,22 @@ const API_BASE_URL = process.env.API_BASE_URL;
 
 // ===== API SERVICE =====
 export const apiService = {
-  async get(endpoint, headers = {}) {
+  async get(endpoint, reqOrHeaders = {}) {
     try {
+      // Check if it's a request object or headers object
+      const headers = reqOrHeaders.session ? {} : reqOrHeaders;
+      
       const res = await axios.get(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
           ...headers
         },
-        withCredentials: true // Important: sends cookies
+        withCredentials: true
       });
       return res.data;
     } catch (err) {
       console.error(`GET ${endpoint} error:`, err.message);
+      console.error('Error details:', err.response?.data);
       if (err.response?.status === 401) {
         console.error('Authentication required');
       }
