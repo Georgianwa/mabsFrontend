@@ -142,6 +142,25 @@
             color: #721c24;
             display: block;
         }
+        /* Fix for category images in table */
+        .category-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            display: block;
+        }
+        .category-image-error {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -193,9 +212,34 @@
                             <% categories.forEach(category => { %>
                                 <tr>
                                     <td>
-                                        <img src="<%= (category.image && category.image.url) ? category.image.url : '/images/placeholder.jpg' %>" 
-                                             alt="<%= category.title %>" 
-                                             style="height: 50px; width: 50px; object-fit: cover; border-radius: 5px;">
+                                        <% 
+                                        // Handle different image formats for category image
+                                        let imageUrl = '';
+                                        if (category.image) {
+                                            // Check if it's an object with url property
+                                            if (typeof category.image === 'object' && category.image.url) {
+                                                imageUrl = category.image.url;
+                                            }
+                                            // Check if it's a direct string URL
+                                            else if (typeof category.image === 'string') {
+                                                imageUrl = category.image;
+                                            }
+                                        }
+                                        %>
+                                        
+                                        <% if (imageUrl) { %>
+                                            <img src="<%= imageUrl %>" 
+                                                 alt="<%= category.title %>" 
+                                                 class="category-image"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="category-image-error" style="display: none;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="category-image-error">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <% } %>
                                     </td>
                                     <td><%= category.title %></td>
                                     <td><%= category.description ? category.description.substring(0, 50) + '...' : 'No description' %></td>
@@ -366,11 +410,21 @@
             document.getElementById('title').value = category.title;
             document.getElementById('description').value = category.description || '';
             
-            if (category.image && category.image.url) {
-                document.getElementById('imageUrl').value = category.image.url;
+            // Handle different image format possibilities
+            let imageUrl = '';
+            if (category.image) {
+                if (typeof category.image === 'object' && category.image.url) {
+                    imageUrl = category.image.url;
+                } else if (typeof category.image === 'string') {
+                    imageUrl = category.image;
+                }
+            }
+            
+            if (imageUrl) {
+                document.getElementById('imageUrl').value = imageUrl;
                 document.getElementById('imagePreview').innerHTML = 
-                    `<img src="${category.image.url}" style="max-width: 200px; border-radius: 8px;">`;
-                uploadedImageUrl = category.image.url;
+                    `<img src="${imageUrl}" style="max-width: 200px; border-radius: 8px;" onerror="this.style.display='none';">`;
+                uploadedImageUrl = imageUrl;
             }
             
             document.getElementById('uploadStatus').style.display = 'none';

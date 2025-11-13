@@ -142,6 +142,25 @@
             color: #721c24;
             display: block;
         }
+        /* Fix for brand logo images in table */
+        .brand-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            display: block;
+        }
+        .brand-logo-error {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -192,9 +211,42 @@
                             <% brands.forEach(brand => { %>
                                 <tr>
                                     <td>
-                                        <img src="<%= (brand.image && brand.image.url) ? brand.image.url : '/images/placeholder.jpg' %>" 
-                                             alt="<%= brand.name %>" 
-                                             style="height: 50px; width: 80px; object-fit: contain; border-radius: 5px;">
+                                        <% 
+                                        // Handle different image formats for brand logo
+                                        let logoUrl = '';
+                                        if (brand.image) {
+                                            // Check if it's an object with url property
+                                            if (typeof brand.image === 'object' && brand.image.url) {
+                                                logoUrl = brand.image.url;
+                                            }
+                                            // Check if it's a direct string URL
+                                            else if (typeof brand.image === 'string') {
+                                                logoUrl = brand.image;
+                                            }
+                                        }
+                                        // Fallback to logo property if exists
+                                        else if (brand.logo) {
+                                            if (typeof brand.logo === 'object' && brand.logo.url) {
+                                                logoUrl = brand.logo.url;
+                                            } else if (typeof brand.logo === 'string') {
+                                                logoUrl = brand.logo;
+                                            }
+                                        }
+                                        %>
+                                        
+                                        <% if (logoUrl) { %>
+                                            <img src="<%= logoUrl %>" 
+                                                 alt="<%= brand.name %>" 
+                                                 class="brand-logo"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="brand-logo-error" style="display: none;">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="brand-logo-error">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        <% } %>
                                     </td>
                                     <td><%= brand.name %></td>
                                     <td>
@@ -357,11 +409,27 @@
             document.getElementById('brandId').value = brand._id;
             document.getElementById('name').value = brand.name;
             
-            if (brand.image && brand.image.url) {
-                document.getElementById('imageUrl').value = brand.image.url;
+            // Handle different image format possibilities
+            let imageUrl = '';
+            if (brand.image) {
+                if (typeof brand.image === 'object' && brand.image.url) {
+                    imageUrl = brand.image.url;
+                } else if (typeof brand.image === 'string') {
+                    imageUrl = brand.image;
+                }
+            } else if (brand.logo) {
+                if (typeof brand.logo === 'object' && brand.logo.url) {
+                    imageUrl = brand.logo.url;
+                } else if (typeof brand.logo === 'string') {
+                    imageUrl = brand.logo;
+                }
+            }
+            
+            if (imageUrl) {
+                document.getElementById('imageUrl').value = imageUrl;
                 document.getElementById('imagePreview').innerHTML = 
-                    `<img src="${brand.image.url}" style="max-width: 200px; border-radius: 8px;">`;
-                uploadedImageUrl = brand.image.url;
+                    `<img src="${imageUrl}" style="max-width: 200px; border-radius: 8px;" onerror="this.style.display='none';">`;
+                uploadedImageUrl = imageUrl;
             }
             
             document.getElementById('uploadStatus').style.display = 'none';

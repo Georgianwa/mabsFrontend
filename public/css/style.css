@@ -868,6 +868,15 @@ ul {
     margin-bottom: 20px;
 }
 
+.product-image img,
+.brand-card img,
+.category-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 /* ===== BRANDS PAGE ===== */
 .brand-section {
     margin-bottom: 80px;

@@ -77,9 +77,31 @@
                         <% products.forEach(product => { %>
                             <tr>
                                 <td>
-                                    <img src="<%= (product.images && product.images[0]) || '/images/placeholder.jpg' %>" 
-                                         alt="<%= product.name %>" 
-                                         style="height: 50px; width: 50px; object-fit: cover; border-radius: 5px;">
+                                    <% 
+                                    // Handle different image formats
+                                    let imageUrl = '';
+                                    if (product.images) {
+                                        if (Array.isArray(product.images) && product.images.length > 0) {
+                                            imageUrl = product.images[0];
+                                        } else if (typeof product.images === 'string') {
+                                            imageUrl = product.images;
+                                        }
+                                    }
+                                    %>
+                                    
+                                    <% if (imageUrl) { %>
+                                        <img src="<%= imageUrl %>" 
+                                             alt="<%= product.name %>" 
+                                             class="product-image"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="product-image-error" style="display: none;">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="product-image-error">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    <% } %>
                                 </td>
                                 <td><%= product.name %></td>
                                 <td><%= product.brand && product.brand.name ? product.brand.name : product.brand %></td>
