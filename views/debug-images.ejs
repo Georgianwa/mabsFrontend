@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Debug</title>
+</head>
+<body>
+    <h1>Image Debug</h1>
+    
+    <h2>Categories</h2>
+    <% categories.forEach(cat => { %>
+        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px;">
+            <h3><%= cat.title || cat.name %></h3>
+            <p>Image Type: <%= typeof cat.image %></p>
+            <p>Image Value: <%= JSON.stringify(cat.image) %></p>
+            
+            <% 
+            let imgUrl = '';
+            if (cat.image && typeof cat.image === 'object' && cat.image.url) {
+                imgUrl = cat.image.url;
+            } else if (typeof cat.image === 'string') {
+                imgUrl = cat.image;
+            }
+            %>
+            
+            <% if (imgUrl) { %>
+                <p>Extracted URL: <%= imgUrl %></p>
+                <img src="<%= imgUrl %>" style="max-width: 200px;" 
+                     onerror="this.nextElementSibling.style.display='block'">
+                <p style="display:none; color: red;">❌ Image failed to load</p>
+            <% } else { %>
+                <p style="color: orange;">⚠️ No image URL found</p>
+            <% } %>
+        </div>
+    <% }); %>
+    
+    <h2>Brands</h2>
+    <% brands.forEach(brand => { %>
+        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px;">
+            <h3><%= brand.name %></h3>
+            <p>Image Type: <%= typeof brand.image %></p>
+            <p>Image Value: <%= JSON.stringify(brand.image) %></p>
+            
+            <% 
+            let imgUrl = '';
+            if (brand.image && typeof brand.image === 'object' && brand.image.url) {
+                imgUrl = brand.image.url;
+            } else if (typeof brand.image === 'string') {
+                imgUrl = brand.image;
+            }
+            %>
+            
+            <% if (imgUrl) { %>
+                <p>Extracted URL: <%= imgUrl %></p>
+                <img src="<%= imgUrl %>" style="max-width: 200px;"
+                     onerror="this.nextElementSibling.style.display='block'">
+                <p style="display:none; color: red;">❌ Image failed to load</p>
+            <% } else { %>
+                <p style="color: orange;">⚠️ No image URL found</p>
+            <% } %>
+        </div>
+    <% }); %>
+</body>
+</html>

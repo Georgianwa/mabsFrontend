@@ -1,13 +1,26 @@
+// public/js/main.js - UPDATED VERSION
+
 // Mobile Menu Toggle
 document.addEventListener('DOMContentLoaded', function() {
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
+    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+    const body = document.body;
     
     if (mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
+            const isActive = navMenu.classList.toggle('active');
             
-            // Toggle icon between bars and times
+            // Toggle body scroll
+            if (isActive) {
+                body.classList.add('menu-open');
+                mobileMenuOverlay.classList.add('active');
+            } else {
+                body.classList.remove('menu-open');
+                mobileMenuOverlay.classList.remove('active');
+            }
+            
+            // Toggle icon
             const icon = this.querySelector('i');
             if (icon.classList.contains('fa-bars')) {
                 icon.classList.remove('fa-bars');
@@ -17,6 +30,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon.classList.add('fa-bars');
             }
         });
+        
+        // Close menu when overlay is clicked
+        if (mobileMenuOverlay) {
+            mobileMenuOverlay.addEventListener('click', function() {
+                navMenu.classList.remove('active');
+                body.classList.remove('menu-open');
+                this.classList.remove('active');
+                
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            });
+        }
     }
     
     // Mobile Dropdown Toggle
@@ -26,9 +52,39 @@ document.addEventListener('DOMContentLoaded', function() {
             if (window.innerWidth <= 768) {
                 e.preventDefault();
                 const parent = this.parentElement;
+                
+                // Close other dropdowns
+                document.querySelectorAll('.has-dropdown').forEach(dropdown => {
+                    if (dropdown !== parent) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+                
                 parent.classList.toggle('active');
             }
         });
+    });
+    
+    // Close mobile menu when window is resized to desktop
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            navMenu.classList.remove('active');
+            body.classList.remove('menu-open');
+            if (mobileMenuOverlay) {
+                mobileMenuOverlay.classList.remove('active');
+            }
+            
+            if (mobileMenuToggle) {
+                const icon = mobileMenuToggle.querySelector('i');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+            
+            // Remove active class from all dropdowns
+            document.querySelectorAll('.has-dropdown').forEach(dropdown => {
+                dropdown.classList.remove('active');
+            });
+        }
     });
     
     // Newsletter Form Submission
@@ -60,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     newsletterMessage.innerHTML = `<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px;">${data.message}</div>`;
                 }
                 
-                // Clear message after 5 seconds
                 setTimeout(() => {
                     newsletterMessage.innerHTML = '';
                 }, 5000);
@@ -92,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('loading');
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
                 
-                // Reset after form submission or timeout
                 setTimeout(() => {
                     this.classList.remove('loading');
                     this.innerHTML = originalText;
@@ -205,13 +259,22 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     animateOnScroll();
+    
+    // Fix image error handling
+    document.querySelectorAll('img').forEach(img => {
+        img.addEventListener('error', function() {
+            if (this.src !== '/images/placeholder.jpg') {
+                this.src = '/images/placeholder.jpg';
+            }
+        });
+    });
 });
 
 // Price formatting helper
 function formatPrice(price) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-NG', {
         style: 'currency',
-        currency: 'USD'
+        currency: 'NGN'
     }).format(price);
 }
 

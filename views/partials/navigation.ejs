@@ -1,38 +1,42 @@
-
 <nav class="main-nav">
     <div class="container">
-        <ul class="nav-menu">
-            <li><a href="/" class="<%= title === 'Home - Mabs Electronics Store' ? 'active' : '' %>">Home</a></li>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="/">Home</a></li>
+            
             <li class="has-dropdown">
-                <a href="/categories">All Categories <i class="fas fa-chevron-down"></i></a>
+                <a href="/categories">
+                    Categories <i class="fas fa-chevron-down"></i>
+                </a>
                 <ul class="dropdown-menu">
-                    <% if (typeof categories !== 'undefined') { %>
+                    <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
                         <% categories.forEach(category => { %>
-                            <li><a href="/category/<%= category.id %>"><%= category.name %></a></li>
+                            <li><a href="/category/<%= category.id || category._id %>"><%= category.name || category.title %></a></li>
                         <% }); %>
+                    <% } else { %>
+                        <li><a href="/categories">View All Categories</a></li>
                     <% } %>
                 </ul>
             </li>
 
             <li class="has-dropdown">
-                <a href="/brands">Shop by Brand <i class="fas fa-chevron-down"></i></a>
+                <a href="/brands">
+                    Brands <i class="fas fa-chevron-down"></i>
+                </a>
                 <ul class="dropdown-menu">
-                    <% if (typeof brands !== 'undefined') { %>
+                    <% if (typeof brands !== 'undefined' && brands && brands.length > 0) { %>
                         <% brands.forEach(brand => { %>
-                            <li><a href="/brand/<%= brand.id %>"><%= brand.name %></a></li>
+                            <li><a href="/brand/<%= brand.id || brand._id %>"><%= brand.name %></a></li>
                         <% }); %>
+                    <% } else { %>
+                        <li><a href="/brands">View All Brands</a></li>
                     <% } %>
                 </ul>
             </li>
 
-
-
-            <li><a href="/products" class="<%= title === 'All products' ? 'active' : '' %>">All products</a></li>
-            <li><a href="/about" class="<%= title === 'About Us' ? 'active' : '' %>">About Us</a></li>
-            <li><a href="/contact" class="<%= title === 'Contact Us' ? 'active' : '' %>">Contact</a></li>
+            <li><a href="/products">Products</a></li>
         </ul>
         
-        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
             <i class="fas fa-bars"></i>
         </button>
     </div>

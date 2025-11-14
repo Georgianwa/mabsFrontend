@@ -870,13 +870,25 @@ ul {
 
 .product-image img,
 .brand-card img,
-.category-card img {
+.category-card img,
+.main-image img {
   width: 100%;
-  height: 200px;
+  height: auto;
+  position: relative;
   object-fit: cover;
   border-radius: 8px;
 }
 
+@media (max-width: 768px) {
+  .product-image,
+  .brand-card,
+  .category-card,
+  .main-image {
+    position: relative;
+    max-width: 100%;
+    z-index: 1; /* Make sure it's not above other content */
+  }
+}
 /* ===== BRANDS PAGE ===== */
 .brand-section {
     margin-bottom: 80px;
@@ -2153,4 +2165,220 @@ ul {
     .category-card img {
         image-rendering: -webkit-optimize-contrast;
     }
+}
+
+/* ===== MOBILE FIXES ===== */
+
+/* Fix sticky product images on mobile */
+.product-image {
+    position: relative; /* Changed from any sticky/fixed value */
+    overflow: hidden;
+    height: 200px;
+    background-color: var(--light-gray);
+}
+
+/* Ensure images don't stick on scroll */
+.product-card .product-image,
+.category-card .category-image {
+    position: relative !important; /* Force relative positioning */
+    z-index: 1; /* Keep it below other content */
+}
+
+/* Fix for product detail page images */
+.product-gallery {
+    position: relative; /* Remove sticky if it exists */
+    top: auto;
+}
+
+.product-gallery .main-image {
+    position: relative;
+    z-index: 1;
+}
+
+/* Mobile specific fixes - 768px and below */
+@media (max-width: 768px) {
+    
+    /* Ensure no sticky images on mobile */
+    .product-image,
+    .main-image,
+    .category-image {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+    }
+    
+    /* Fix product gallery on mobile */
+    .product-gallery {
+        position: relative !important;
+        top: auto !important;
+        height: auto !important;
+    }
+    
+    /* Ensure proper stacking order */
+    .site-header {
+        position: relative;
+        z-index: 100;
+    }
+    
+    .main-nav {
+        position: relative;
+        z-index: 99;
+    }
+    
+    /* Fix navigation dropdowns on mobile */
+    .has-dropdown {
+        position: relative;
+    }
+    
+    .dropdown-menu {
+        position: static !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        box-shadow: none;
+        background-color: rgba(255, 255, 255, 0.1);
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .has-dropdown.active .dropdown-menu {
+        display: block;
+    }
+    
+    /* Make dropdowns work with click on mobile */
+    .has-dropdown > a {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .has-dropdown > a i {
+        transition: transform 0.3s ease;
+    }
+    
+    .has-dropdown.active > a i {
+        transform: rotate(180deg);
+    }
+    
+    /* Fix search bar loading/results */
+    .search-bar {
+        position: relative;
+        z-index: 10;
+    }
+    
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+    }
+    
+    /* Prevent body scroll when menu is open */
+    body.menu-open {
+        overflow: hidden;
+    }
+    
+    /* Fix mobile menu */
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        background: var(--primary-color);
+        z-index: 1000;
+        overflow-y: auto;
+        transition: left 0.3s ease;
+        padding-top: 60px;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    /* Mobile menu overlay */
+    .mobile-menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+    
+    .mobile-menu-overlay.active {
+        display: block;
+    }
+    
+    /* Fix products grid on mobile */
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px;
+    }
+    
+    .product-card {
+        width: 100%;
+        height: auto;
+    }
+    
+    .product-image {
+        height: 150px;
+    }
+}
+
+/* Extra small mobile - 480px and below */
+@media (max-width: 480px) {
+    /* Single column for very small screens */
+    .products-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .product-image {
+        height: 200px;
+    }
+    
+    /* Ensure dropdowns are accessible */
+    .dropdown-menu {
+        font-size: 14px;
+    }
+    
+    .dropdown-menu li a {
+        padding: 10px 15px;
+    }
+}
+
+.brand-card img,
+.category-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+}
+
+/* Fallback for missing images */
+.brand-card img[src=""],
+.brand-card img:not([src]),
+.category-card img[src=""],
+.category-card img:not([src]) {
+  display: none;
+}
+
+.brand-card:not(:has(img[src])):before,
+.category-card:not(:has(img[src])):before {
+  content: '📦';
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }

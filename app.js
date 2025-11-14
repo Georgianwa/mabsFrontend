@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
 const API_BASE_URL = process.env.API_BASE_URL;
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -36,6 +36,26 @@ const upload = multer({
     cb(null, true);
   }
 });
+
+const cache = {
+  data: {},
+  timestamps: {},
+  TTL: 5 * 60 * 1000, // 5 minutes
+  
+  get(key) {
+    const now = Date.now();
+    if (this.data[key] && (now - this.timestamps[key]) < this.TTL) {
+      console.log(`📦 Cache hit: ${key}`);
+      return this.data[key];
+    }
+    return null;
+  },
+  
+  set(key, value) {
+    this.data[key] = value;
+    this.timestamps[key] = Date.now();
+  }
+};
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -84,6 +104,9 @@ const apiService = {
 
   async get(endpoint, req, headers = {}) {
     try {
+      const cacheKey = endpoint;
+      const cached = cache.get(cacheKey);
+      if (cached) return cached;
 
       await delay(100);
 
@@ -100,6 +123,8 @@ const apiService = {
       }
 
       const res = await axios.get(`${API_BASE_URL}${endpoint}`, config);
+      cache.set(cacheKey, res.data)
+
       return res.data;
     } catch (err) {
       
@@ -193,6 +218,33 @@ const apiService = {
   },
 };
 
+// Helper to get categories and brands for navigation
+async function getNavData(req) {
+  try {
+    const [categoriesRes, brandsRes] = await Promise.all([
+      apiService.get('/categories', req),
+      apiService.get('/brands', req),
+    ]);
+
+    const categories = (Array.isArray(categoriesRes) ? categoriesRes : categoriesRes?.categories || [])
+      .map(cat => ({
+        id: cat._id || cat.id,
+        name: cat.title || cat.name
+      }));
+    
+    const brands = (Array.isArray(brandsRes) ? brandsRes : brandsRes?.brands || [])
+      .map(brand => ({
+        id: brand._id || brand.id,
+        name: brand.name
+      }));
+
+    return { categories, brands };
+  } catch (error) {
+    console.error('Error getting nav data:', error);
+    return { categories: [], brands: [] };
+  }
+}
+
 // ===== HELPER =====
 const getFeaturedProducts = (products) =>
   Array.isArray(products) ? products.filter((p) => p.featured).slice(0, 6) : [];
@@ -245,14 +297,14 @@ app.get('/', async (req, res) => {
 // Products page
 app.get('/products', async (req, res) => {
   try {
+    const navData = await getNavData(req);
     const productsRes = await apiService.get('/products', req);
-    const productList = Array.isArray(productsRes) 
-      ? productsRes 
-      : (productsRes?.products || []);
+    const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
     
     res.render('products', {
       title: 'All Products',
       products: productList,
+      ...navData
     });
   } catch (err) {
     console.error('Error loading products:', err);
@@ -263,19 +315,19 @@ app.get('/products', async (req, res) => {
   }
 });
 
-// Single product - FIXED
 app.get('/product/:id', async (req, res) => {
   try {
+    const navData = await getNavData(req);
     const product = await apiService.get(`/products/${req.params.id}`, req);
     
     if (!product) {
       return res.status(404).render('404', { 
         title: 'Not Found', 
-        message: 'Product not found.' 
+        message: 'Product not found.',
+        ...navData
       });
     }
 
-    // Get related products (same category)
     const relatedProductsRes = await apiService.get(`/products?category=${product.category._id || product.category}`, req);
     const relatedProducts = (Array.isArray(relatedProductsRes) ? relatedProductsRes : relatedProductsRes?.products || [])
       .filter(p => p._id !== product._id)
@@ -284,7 +336,10 @@ app.get('/product/:id', async (req, res) => {
     res.render('product', { 
       title: product.name, 
       product,
-      relatedProducts
+      relatedProducts,
+      phoneNumber: process.env.PHONE_NUMBER,
+      ...navData,
+
     });
   } catch (err) {
     console.error('Error loading product:', err);
@@ -298,14 +353,14 @@ app.get('/product/:id', async (req, res) => {
 // Categories page
 app.get('/categories', async (req, res) => {
   try {
+    const navData = await getNavData(req);
     const categoriesRes = await apiService.get('/categories', req);
-    const categoryList = Array.isArray(categoriesRes) 
-      ? categoriesRes 
-      : (categoriesRes?.categories || []);
+    const categoryList = Array.isArray(categoriesRes) ? categoriesRes : (categoriesRes?.categories || []);
     
     res.render('categories', {
       title: 'Categories',
       categories: categoryList,
+      ...navData
     });
   } catch (err) {
     console.error('Error loading categories:', err);
@@ -316,29 +371,28 @@ app.get('/categories', async (req, res) => {
   }
 });
 
-// Products by category - FIXED
+// Products by category
 app.get('/category/:id', async (req, res) => {
   try {
-    // First get the category details
+    const navData = await getNavData(req);
     const category = await apiService.get(`/categories/${req.params.id}`, req);
     
     if (!category) {
       return res.status(404).render('404', { 
         title: 'Not Found', 
-        message: 'Category not found.' 
+        message: 'Category not found.',
+        ...navData
       });
     }
 
-    // Then get products for this category
     const productsRes = await apiService.get(`/products?category=${req.params.id}`, req);
-    const productList = Array.isArray(productsRes) 
-      ? productsRes 
-      : (productsRes?.products || []);
+    const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
 
     res.render('category', {
       title: `${category.title} - Products`,
       category,
       products: productList,
+      ...navData
     });
   } catch (err) {
     console.error('Error loading category:', err);
@@ -352,26 +406,20 @@ app.get('/category/:id', async (req, res) => {
 // Brands page
 app.get('/brands', async (req, res) => {
   try {
+    const navData = await getNavData(req);
     const [brandsRes, productsRes] = await Promise.all([
       apiService.get('/brands', req),
       apiService.get('/products', req),
     ]);
 
-    const brandList = Array.isArray(brandsRes) 
-      ? brandsRes 
-      : (brandsRes?.brands || []);
-    
-    const productList = Array.isArray(productsRes) 
-      ? productsRes 
-      : (productsRes?.products || []);
+    const brandList = Array.isArray(brandsRes) ? brandsRes : (brandsRes?.brands || []);
+    const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
 
-    // Group products by brand
     const brandProducts = {};
     brandList.forEach((brand) => {
       const brandId = brand._id || brand.id;
       const brandName = brand.name;
       
-      // Match products by brand ObjectId
       const filtered = productList.filter((p) => {
         const productBrandId = p.brand?._id || p.brand;
         return productBrandId === brandId || p.brand?.name === brandName;
@@ -385,6 +433,7 @@ app.get('/brands', async (req, res) => {
       title: 'Shop by Brand',
       brands: brandList,
       brandProducts,
+      ...navData
     });
   } catch (err) {
     console.error('Error loading brands:', err);
@@ -395,29 +444,28 @@ app.get('/brands', async (req, res) => {
   }
 });
 
-// Single brand page - FIXED (NEW ROUTE)
+// Single brand page
 app.get('/brand/:id', async (req, res) => {
   try {
-    // Get brand details
+    const navData = await getNavData(req);
     const brand = await apiService.get(`/brands/${req.params.id}`, req);
     
     if (!brand) {
       return res.status(404).render('404', { 
         title: 'Not Found', 
-        message: 'Brand not found.' 
+        message: 'Brand not found.',
+        ...navData
       });
     }
 
-    // Get products for this brand
     const productsRes = await apiService.get(`/products?brand=${req.params.id}`, req);
-    const productList = Array.isArray(productsRes) 
-      ? productsRes 
-      : (productsRes?.products || []);
+    const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
 
     res.render('brand', {
       title: `${brand.name} - Products`,
       brand,
       products: productList,
+      ...navData
     });
   } catch (err) {
     console.error('Error loading brand:', err);
@@ -426,31 +474,36 @@ app.get('/brand/:id', async (req, res) => {
       message: 'Unable to load brand. Please try again later.' 
     });
   }
-});
+})
 
 // About, Cart, Search, Contact
-app.get('/about', (req, res) => {
-  res.render('about', { title: 'About Us' });
+app.get('/about', async (req, res) => {
+  const navData = await getNavData(req);
+  res.render('about', { title: 'About Us', ...navData });
 });
 
-app.get('/cart', (req, res) => {
-  const cart = req.session.cart || [];
-  res.render('cart', { title: 'My Cart', cart });
+app.get('/cart', async (req, res) => {
+  const navData = await getNavData(req);
+  res.render('cart', { 
+    title: 'My Cart',
+    phoneNumber: process.env.PHONE_NUMBER,
+    ...navData
+  });
 });
 
 app.get('/search', async (req, res) => {
   const q = req.query.q || '';
   try {
-    const resultsRes = await apiService.get(`/products?search=${q}`, req);
-    const searchResults = Array.isArray(resultsRes) 
-      ? resultsRes 
-      : (resultsRes?.products || []);
+    const navData = await getNavData(req);
+    const resultsRes = await apiService.get(`/products?search=${encodeURIComponent(q)}`, req);
+    const searchResults = Array.isArray(resultsRes) ? resultsRes : (resultsRes?.products || []);
     
     res.render('search', {
       title: `Search results for "${q}"`,
       products: searchResults,
       query: q,
       results: searchResults,
+      ...navData
     });
   } catch (err) {
     console.error('Error searching:', err);
@@ -461,12 +514,14 @@ app.get('/search', async (req, res) => {
   }
 });
 
-app.get('/contact', (req, res) => {
+app.get('/contact', async (req, res) => {
+  const navData = await getNavData(req);
   res.render('contact', {
     title: 'Contact Us',
     success: null,
     error: null,
     errors: [],
+    ...navData
   });
 });
 
@@ -476,6 +531,7 @@ app.post(
   body('email').isEmail().withMessage('Valid email is required'),
   body('message').notEmpty().withMessage('Message cannot be empty'),
   async (req, res) => {
+    const navData = await getNavData(req);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).render('contact', {
@@ -483,6 +539,7 @@ app.post(
         success: null,
         error: null,
         errors: errors.array(),
+        ...navData
       });
     }
 
@@ -493,6 +550,7 @@ app.post(
         success: 'Thank you for contacting us! We\'ll get back to you soon.',
         error: null,
         errors: [],
+        ...navData
       });
     } catch (error) {
       console.error('Contact form error:', error.message);
@@ -501,6 +559,7 @@ app.post(
         success: null,
         error: 'Something went wrong. Please try again later.',
         errors: [],
+        ...navData
       });
     }
   }
@@ -647,8 +706,8 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
       category: req.body.category,
       price: parseFloat(req.body.price),
       description: req.body.description,
-      featured: req.body.featured === true || req.body.featured === 'true',
-      images: req.body.images,
+      featured: req.body.featured === 'on' || req.body.featured === 'true' || req.body.featured === true,
+      images: req.body.images ? (Array.isArray(req.body.images) ? req.body.images : [req.body.images]) : [],
       specifications: req.body.specifications || {},
     };
 
@@ -682,8 +741,8 @@ app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
       category: req.body.category,
       price: parseFloat(req.body.price),
       description: req.body.description,
-      featured: req.body.featured === true || req.body.featured === 'true',
-      images: req.body.images,
+      featured: req.body.featured === 'on' || req.body.featured === 'true' || req.body.featured === true,
+      images: req.body.images ? (Array.isArray(req.body.images) ? req.body.images : [req.body.images]) : [],
       specifications: req.body.specifications || {},
     };
 
@@ -926,6 +985,22 @@ app.post('/upload-brand-image', isAdmin, upload.single('image'), async (req, res
       success: false, 
       message: error.response?.data?.message || error.message 
     });
+  }
+});
+
+app.get('/debug-images', async (req, res) => {
+  try {
+    const [categoriesRes, brandsRes] = await Promise.all([
+      apiService.get('/categories', req),
+      apiService.get('/brands', req),
+    ]);
+    
+    res.render('debug-images', {
+      categories: Array.isArray(categoriesRes) ? categoriesRes : categoriesRes?.categories || [],
+      brands: Array.isArray(brandsRes) ? brandsRes : brandsRes?.brands || []
+    });
+  } catch (error) {
+    res.send('Error: ' + error.message);
   }
 });
 
