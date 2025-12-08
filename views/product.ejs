@@ -24,7 +24,7 @@
                         mainImageUrl = product.images;
                     }
                     %>
-                    <img src="<%= mainImageUrl || '/images/placeholder.jpg' %>" alt="<%= product.name %>" id="main-product-image">
+                    <img src="<%= mainImageUrl || '/images/placeholder.jpg' %>" alt="<%= product.name %>" id="main-product-image" onerror="this.src='/images/placeholder.jpg'">
                 </div>
                 <% if (product.images && Array.isArray(product.images) && product.images.length > 1) { %>
                     <div class="thumbnail-images">
@@ -32,7 +32,8 @@
                             <img src="<%= image %>" 
                                  alt="<%= product.name %>" 
                                  class="<%= index === 0 ? 'active' : '' %>" 
-                                 onclick="changeImage('<%= image %>')">
+                                 onclick="changeImage('<%= image %>')"
+                                 onerror="this.style.display='none'">
                         <% }); %>
                     </div>
                 <% } %>
@@ -52,7 +53,7 @@
                 </div>
                 
                 <div class="product-actions">
-                    <button class="btn btn-primary" onclick="addToCart('<%= product._id || product.id %>')">
+                    <button class="btn btn-primary" onclick="handleAddToCart()">
                         <i class="fas fa-shopping-cart"></i> Add to Cart
                     </button>
                 </div>
@@ -64,7 +65,6 @@
                     <% if (product.brand) { %>
                         <p><strong>Brand:</strong> <%= product.brand.name || product.brand %></p>
                     <% } %>
-                    <p><strong>Product ID:</strong> <%= product._id || product.id %></p>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                                         relatedImageUrl = relatedProduct.images;
                                     }
                                     %>
-                                    <img src="<%= relatedImageUrl || '/images/placeholder.jpg' %>" alt="<%= relatedProduct.name %>">
+                                    <img src="<%= relatedImageUrl || '/images/placeholder.jpg' %>" alt="<%= relatedProduct.name %>" onerror="this.src='/images/placeholder.jpg'">
                                 </a>
                             </div>
                             <div class="product-info">
@@ -130,8 +130,18 @@
 </main>
 
 <script>
+// Product data
+const productData = {
+    id: '<%= product._id || product.id %>',
+    name: '<%= product.name.replace(/'/g, "\\'") %>',
+    price: <%= product.price || 0 %>,
+    image: '<%= mainImageUrl || "/images/placeholder.jpg" %>'
+};
+
 function changeImage(imageSrc) {
-    document.getElementById('main-product-image').src = imageSrc;
+    const mainImage = document.getElementById('main-product-image');
+    mainImage.src = imageSrc;
+    
     document.querySelectorAll('.thumbnail-images img').forEach(img => {
         img.classList.remove('active');
         if (img.src === imageSrc) {
@@ -140,10 +150,19 @@ function changeImage(imageSrc) {
     });
 }
 
-function addToCart(productId) {
-    // Add to cart functionality
-    alert('Product added to cart! (Feature coming soon)');
-    // TODO: Implement actual cart functionality
+function handleAddToCart() {
+    // Use the addToCart function from cart.js
+    if (typeof addToCart === 'function') {
+        addToCart(
+            productData.id,
+            productData.name,
+            productData.price,
+            productData.image
+        );
+    } else {
+        console.error('Cart function not loaded');
+        alert('Unable to add to cart. Please refresh the page.');
+    }
 }
 </script>
 

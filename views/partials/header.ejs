@@ -16,6 +16,12 @@
     
     <!-- Cart Functions - Load early -->
     <script src="/js/cart.js"></script>
+
+    <!-- Pass phone number to cart.js -->
+     <script>
+     window.PHONE_NUMBER = '<%= typeof phoneNumber !== "undefined" ? phoneNumber : process.env.PHONE_NUMBER %>';
+     </script>
+     
 </head>
 <body>
     <header class="site-header">

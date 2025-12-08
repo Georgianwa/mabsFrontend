@@ -10,7 +10,11 @@
                 <ul class="dropdown-menu">
                     <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
                         <% categories.forEach(category => { %>
-                            <li><a href="/category/<%= category.id || category._id %>"><%= category.name || category.title %></a></li>
+                            <li>
+                                <a href="/category/<%= category._id || category.id %>">
+                                    <%= category.title || category.name %>
+                                </a>
+                            </li>
                         <% }); %>
                     <% } else { %>
                         <li><a href="/categories">View All Categories</a></li>
@@ -25,7 +29,11 @@
                 <ul class="dropdown-menu">
                     <% if (typeof brands !== 'undefined' && brands && brands.length > 0) { %>
                         <% brands.forEach(brand => { %>
-                            <li><a href="/brand/<%= brand.id || brand._id %>"><%= brand.name %></a></li>
+                            <li>
+                                <a href="/brand/<%= brand._id || brand.id %>">
+                                    <%= brand.name %>
+                                </a>
+                            </li>
                         <% }); %>
                     <% } else { %>
                         <li><a href="/brands">View All Brands</a></li>

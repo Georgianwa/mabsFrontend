@@ -51,22 +51,33 @@
             
             <% if (featuredProducts && featuredProducts.length > 0) { %>
                 <div class="products-grid">
-                    <% featuredProducts.forEach(product => { %>
+                    <% featuredProducts.forEach(product => { 
+                        // Extract image URL safely
+                        let imageUrl = '';
+                        if (product.images) {
+                            if (Array.isArray(product.images) && product.images.length > 0) {
+                                imageUrl = product.images[0];
+                            } else if (typeof product.images === 'string') {
+                                imageUrl = product.images;
+                            }
+                        }
+                    %>
                         <div class="product-card">
                             <div class="product-image">
-                                <a href="/product/<%= product._id %>">
-                                    <img src="<%= product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.jpg' %>" 
-                                         alt="<%= product.name %>">
+                                <a href="/product/<%= product._id || product.id %>">
+                                    <img src="<%= imageUrl || '/images/placeholder.jpg' %>" 
+                                         alt="<%= product.name %>"
+                                         onerror="this.src='/images/placeholder.jpg'">
                                 </a>
                                 <span class="badge">Featured</span>
                             </div>
                             <div class="product-info">
-                                <p class="product-brand"><%= product.brand %></p>
+                                <p class="product-brand"><%= product.brand?.name || product.brand %></p>
                                 <h3 class="product-name">
-                                    <a href="/product/<%= product._id %>"><%= product.name %></a>
+                                    <a href="/product/<%= product._id || product.id %>"><%= product.name %></a>
                                 </h3>
-                                <p class="product-price">₦<%= product.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
-                                <a href="/product/<%= product._id %>" class="btn btn-outline">View Details</a>
+                                <p class="product-price">₦<%= product.price ? product.price.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' %></p>
+                                <a href="/product/<%= product._id || product.id %>" class="btn btn-outline">View Details</a>
                             </div>
                         </div>
                     <% }); %>
@@ -87,13 +98,25 @@
             
             <% if (categories && categories.length > 0) { %>
                 <div class="category-grid">
-                    <% categories.forEach(category => { %>
+                    <% categories.forEach(category => { 
+                        // Extract image URL safely
+                        let catImageUrl = '';
+                        if (category.image) {
+                            if (typeof category.image === 'object' && category.image.url) {
+                                catImageUrl = category.image.url;
+                            } else if (typeof category.image === 'string') {
+                                catImageUrl = category.image;
+                            }
+                        }
+                    %>
                         <div class="category-card">
-                            <a href="/category/<%= category._id %>">
-                                <img src="<%= category.image || '/images/placeholder.jpg' %>" alt="<%= category.name %>">
+                            <a href="/category/<%= category._id || category.id %>">
+                                <img src="<%= catImageUrl || '/images/placeholder.jpg' %>" 
+                                     alt="<%= category.title || category.name %>"
+                                     onerror="this.src='/images/placeholder.jpg'">
                                 <div class="category-overlay">
-                                    <h3><%= category.name %></h3>
-                                    <p><%= category.description %></p>
+                                    <h3><%= category.title || category.name %></h3>
+                                    <p><%= category.description || 'Explore our selection' %></p>
                                 </div>
                             </a>
                         </div>
@@ -113,9 +136,27 @@
             
             <% if (brands && brands.length > 0) { %>
                 <div class="brands-grid">
-                    <% brands.forEach(brand => { %>
+                    <% brands.forEach(brand => { 
+                        // Extract logo URL safely
+                        let logoUrl = '';
+                        if (brand.image) {
+                            if (typeof brand.image === 'object' && brand.image.url) {
+                                logoUrl = brand.image.url;
+                            } else if (typeof brand.image === 'string') {
+                                logoUrl = brand.image
+                            }
+                        } else if (brand.logo) {
+                            if (typeof brand.logo === 'object' && brand.logo.url) {
+                                logoUrl = brand.logo.url;
+                            } else if (typeof brand.logo === 'string') {
+                                logoUrl = brand.logo;
+                            }
+                        }
+                    %>
                         <div class="brand-card">
-                            <img src="<%= brand.logo || '/images/placeholder.jpg' %>" alt="<%= brand.name %>">
+                            <img src="<%= logoUrl || '/images/placeholder.jpg' %>" 
+                                 alt="<%= brand.name %>"
+                                 onerror="this.style.display='none'">
                         </div>
                     <% }); %>
                 </div>
@@ -128,4 +169,4 @@
     </section>
 </main>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %>   

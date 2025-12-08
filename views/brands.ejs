@@ -53,14 +53,20 @@
                                             <div class="product-image">
                                                 <a href="/product/<%= product._id || product.id %>">
                                                     <% 
-                                                    let productImageUrl = '';
-                                                    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-                                                        productImageUrl = product.images[0];
-                                                    } else if (product.images && typeof product.images === 'string') {
-                                                        productImageUrl = product.images;
-                                                    }
-                                                    %>
-                                                    <img src="<%= productImageUrl || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+                                                    <% 
+                                                    // Safe image URL extraction
+                                                    let imageUrl = '';
+                                                    if (brand.image) {
+                                                        if (typeof brand.image === 'object' && brand.image.url) {
+                                                             imageUrl = brand.image.url;
+                                                            } else if (typeof brand.image === 'string') {
+                                                                imageUrl = brand.image;
+                                                            }
+                                                        }
+                                                        %>
+                                                        <img src="<%= imageUrl || '/images/placeholder.jpg' %>" 
+                                                        alt="<%= brand.name %>"
+                                                        onerror="this.src='/images/placeholder.jpg'">
                                                 </a>
                                                 <% if (product.featured) { %>
                                                     <span class="badge">Featured</span>

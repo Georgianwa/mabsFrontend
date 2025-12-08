@@ -25,7 +25,7 @@
                                     }
                                 }
                                 %>
-                                <img src="<%= imageUrl || '/images/placeholder.jpg' %>" alt="<%= category.title %>">
+                                <img src="<%= imageUrl || '/images/placeholder.jpg' %>" alt="<%= category.title %>" onerror="this.src='/images/placeholder.jpg'">
                             </div>
                             <div class="category-content">
                                 <h2><%= category.title %></h2>

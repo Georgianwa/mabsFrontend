@@ -64,6 +64,7 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Image</th>
                             <th>Name</th>
                             <th>Brand</th>
@@ -265,7 +266,7 @@
         document.getElementById('productForm').addEventListener('submit', async function(e) {
             e.preventDefault();
     
-            const formData = {
+            const productData = {
                 name: document.getElementById('name').value,
                 brand: document.getElementById('brand').value,
                 category: document.getElementById('category').value,
@@ -273,27 +274,27 @@
                 description: document.getElementById('description').value,
                 images: document.getElementById('imageUrl').value,
                 featured: document.getElementById('featured').checked,
-                specifications: document.getElementById('specifications').value ? 
-                JSON.parse(document.getElementById('specifications').value) : {}
+                specifications: document.getElementById('specifications').value ?
+                    JSON.parse(document.getElementById('specifications').value) : {}
        };
     
             const productId = document.getElementById('productId').value;
             const url = productId ? `/admin/products/edit/${productId}` : '/admin/products/add';
-            const method = 'POST';
     
             console.log('Submitting product data:', formData); // Debug log
     
             try {
                 const response = await fetch(url, {
-                method: method,
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(productData)
             });
         
             console.log('Response status:', response.status); // Debug log
-        
+            const data = await response.json();
+            console.log('Response data:', data); // Debug log
         // Check if response is JSON or HTML
             const contentType = response.headers.get('content-type');
         
