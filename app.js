@@ -403,36 +403,18 @@ app.get('/category/:id', async (req, res) => {
   }
 });
 
-// Brands page
+// ADD THIS TO YOUR app.js AFTER THE CATEGORIES ROUTE (around line 350)
+
+// Brands page - All brands
 app.get('/brands', async (req, res) => {
   try {
     const navData = await getNavData(req);
-    const [brandsRes, productsRes] = await Promise.all([
-      apiService.get('/brands', req),
-      apiService.get('/products', req),
-    ]);
-
+    const brandsRes = await apiService.get('/brands', req);
     const brandList = Array.isArray(brandsRes) ? brandsRes : (brandsRes?.brands || []);
-    const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
-
-    const brandProducts = {};
-    brandList.forEach((brand) => {
-      const brandId = brand._id || brand.id;
-      const brandName = brand.name;
-      
-      const filtered = productList.filter((p) => {
-        const productBrandId = p.brand?._id || p.brand;
-        return productBrandId === brandId || p.brand?.name === brandName;
-      });
-      
-      brandProducts[brandId] = filtered;
-      brandProducts[brandName] = filtered;
-    });
-
+    
     res.render('brands', {
       title: 'Shop by Brand',
       brands: brandList,
-      brandProducts,
       ...navData
     });
   } catch (err) {
@@ -474,7 +456,7 @@ app.get('/brand/:id', async (req, res) => {
       message: 'Unable to load brand. Please try again later.' 
     });
   }
-})
+});
 
 // About, Cart, Search, Contact
 app.get('/about', async (req, res) => {
@@ -695,10 +677,22 @@ app.get('/admin/products', isAdmin, async (req, res) => {
   }
 });
 
+// CORRECTED ADMIN PRODUCT ROUTES - Replace lines 520-600 in your app.js
+
 app.post('/admin/products/add', isAdmin, async (req, res) => {
   try {
     console.log('📝 Frontend: Adding product...');
     console.log('Request body:', req.body);
+    
+    // Parse the images - handle both string and array
+    let imagesArray = [];
+    if (req.body.images) {
+      if (Array.isArray(req.body.images)) {
+        imagesArray = req.body.images;
+      } else if (typeof req.body.images === 'string') {
+        imagesArray = [req.body.images];
+      }
+    }
     
     const productData = {
       name: req.body.name,
@@ -707,9 +701,13 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
       price: parseFloat(req.body.price),
       description: req.body.description,
       featured: req.body.featured === 'on' || req.body.featured === 'true' || req.body.featured === true,
-      images: req.body.images ? (Array.isArray(req.body.images) ? req.body.images : [req.body.images]) : [],
-      specifications: req.body.specifications || {},
+      images: imagesArray
     };
+    
+    // Add optional productId if provided
+    if (req.body.productId && req.body.productId.trim()) {
+      productData.productId = req.body.productId.trim();
+    }
 
     console.log('Sending to backend:', productData);
     
@@ -735,6 +733,19 @@ app.post('/admin/products/add', isAdmin, async (req, res) => {
 
 app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
   try {
+    console.log('📝 Frontend: Editing product...');
+    console.log('Request body:', req.body);
+    
+    // Parse the images - handle both string and array
+    let imagesArray = [];
+    if (req.body.images) {
+      if (Array.isArray(req.body.images)) {
+        imagesArray = req.body.images;
+      } else if (typeof req.body.images === 'string') {
+        imagesArray = [req.body.images];
+      }
+    }
+    
     const productData = {
       name: req.body.name,
       brand: req.body.brand,
@@ -742,11 +753,19 @@ app.post('/admin/products/edit/:id', isAdmin, async (req, res) => {
       price: parseFloat(req.body.price),
       description: req.body.description,
       featured: req.body.featured === 'on' || req.body.featured === 'true' || req.body.featured === true,
-      images: req.body.images ? (Array.isArray(req.body.images) ? req.body.images : [req.body.images]) : [],
-      specifications: req.body.specifications || {},
+      images: imagesArray
     };
+    
+    // Add optional productId if provided
+    if (req.body.productId && req.body.productId.trim()) {
+      productData.productId = req.body.productId.trim();
+    }
 
+    console.log('Sending to backend:', productData);
+    
     const result = await apiService.put(`/products/${req.params.id}`, productData, req);
+    
+    console.log('✅ Product updated:', result);
     
     res.json({ 
       success: true, 

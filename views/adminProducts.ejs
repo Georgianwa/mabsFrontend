@@ -23,6 +23,19 @@
             color: #721c24;
             display: block;
         }
+        .product-image, .product-image-error {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .product-image-error {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            color: #999;
+        }
     </style>
 </head>
 <body class="admin-page">
@@ -35,7 +48,6 @@
                     <li><a href="/admin/products" class="active">Products</a></li>
                     <li><a href="/admin/categories">Categories</a></li>
                     <li><a href="/admin/brands">Brands</a></li>
-                    <li><a href="/admin/about">About Page</a></li>
                     <li><a href="/admin/logout" style="background-color: var(--error-color);">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a></li>
@@ -64,7 +76,6 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>Image</th>
                             <th>Name</th>
                             <th>Brand</th>
@@ -79,7 +90,6 @@
                             <tr>
                                 <td>
                                     <% 
-                                    // Handle different image formats
                                     let imageUrl = '';
                                     if (product.images) {
                                         if (Array.isArray(product.images) && product.images.length > 0) {
@@ -108,7 +118,11 @@
                                 <td><%= product.brand && product.brand.name ? product.brand.name : product.brand %></td>
                                 <td>₦<%= product.price ? product.price.toLocaleString() : '0' %></td>
                                 <td><%= product.category && product.category.title ? product.category.title : product.category %></td>
-                                <td><%= product.featured ? '✓' : '✗' %></td>
+                                <td>
+                                    <span style="color: <%= product.isFeautured ? 'green' : 'gray' %>; font-size: 20px;">
+                                        <%= product.isFeautured ? '✓' : '✗' %>
+                                    </span>
+                                </td>
                                 <td>
                                     <div class="action-buttons">
                                         <button onclick='openEditModal(<%= JSON.stringify(product) %>)' class="btn btn-small btn-edit">
@@ -139,6 +153,12 @@
             </div>
             <form id="productForm">
                 <input type="hidden" id="productId" name="id">
+                
+                <div class="form-group">
+                    <label for="customProductId">Custom Product ID (Optional)</label>
+                    <input type="text" id="customProductId" name="productId" placeholder="e.g., PROD-001">
+                    <small>Leave blank to auto-generate</small>
+                </div>
                 
                 <div class="form-group">
                     <label for="name">Product Name *</label>
@@ -191,15 +211,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="featured" name="featured">
-                        Featured Product
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="featured" name="featured" style="width: auto;">
+                        <span>Featured Product</span>
                     </label>
-                </div>
-                
-                <div class="form-group">
-                    <label for="specifications">Specifications (JSON format)</label>
-                    <textarea id="specifications" name="specifications" rows="4" placeholder='{"Screen Size": "65 inches", "Resolution": "4K"}'></textarea>
+                    <small>Featured products appear on the homepage</small>
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%;" id="submitBtn">
@@ -274,58 +290,44 @@
                 description: document.getElementById('description').value,
                 images: document.getElementById('imageUrl').value,
                 featured: document.getElementById('featured').checked,
-                specifications: document.getElementById('specifications').value ?
-                    JSON.parse(document.getElementById('specifications').value) : {}
-       };
+                productId: document.getElementById('customProductId').value
+            };
     
             const productId = document.getElementById('productId').value;
             const url = productId ? `/admin/products/edit/${productId}` : '/admin/products/add';
     
-            console.log('Submitting product data:', formData); // Debug log
+            console.log('Submitting product data:', productData);
     
             try {
                 const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(productData)
-            });
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(productData)
+                });
         
-            console.log('Response status:', response.status); // Debug log
-            const data = await response.json();
-            console.log('Response data:', data); // Debug log
-        // Check if response is JSON or HTML
-            const contentType = response.headers.get('content-type');
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
         
-            if (response.ok) {
-                alert('Product saved successfully!');
-                window.location.href = '/admin/products';
-            } else {
-                let errorMessage = 'Failed to save product.';
-            
-                if (contentType && contentType.includes('application/json')) {
-                    const errorData = await response.json();
-                    errorMessage += ' ' + (errorData.message || JSON.stringify(errorData));
+                if (data.success) {
+                    alert('Product saved successfully!');
+                    window.location.href = '/admin/products';
                 } else {
-                    const errorText = await response.text();
-                // Extract just the error message, not the whole HTML
-                    errorMessage += ' Please check the console for details.';
-                    console.error('Error response:', errorText);
+                    alert('Error: ' + (data.message || 'Failed to save product'));
                 }
-            
-                alert('Error: ' + errorMessage);
+            } catch (error) {
+                console.error('Error details:', error);
+                alert('Error: ' + error.message);
             }
-        } catch (error) {
-            console.error('Error details:', error);
-            alert('Error: ' + error.message);
-       }
-    });
+        });
         
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Add New Product';
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '';
+            document.getElementById('customProductId').value = '';
             document.getElementById('imagePreview').innerHTML = '';
             document.getElementById('uploadStatus').style.display = 'none';
             uploadedImageUrl = '';
@@ -335,12 +337,13 @@
         function openEditModal(product) {
             document.getElementById('modalTitle').textContent = 'Edit Product';
             document.getElementById('productId').value = product._id;
+            document.getElementById('customProductId').value = product.productId || '';
             document.getElementById('name').value = product.name;
             document.getElementById('brand').value = product.brand && product.brand._id ? product.brand._id : product.brand;
             document.getElementById('category').value = product.category && product.category._id ? product.category._id : product.category;
             document.getElementById('price').value = product.price;
             document.getElementById('description').value = product.description;
-            document.getElementById('featured').checked = product.featured || false;
+            document.getElementById('featured').checked = product.isFeautured || false;
             
             if (product.images && product.images[0]) {
                 document.getElementById('imageUrl').value = product.images[0];
@@ -348,9 +351,6 @@
                     `<img src="${product.images[0]}" style="max-width: 200px; border-radius: 8px;">`;
                 uploadedImageUrl = product.images[0];
             }
-            
-            document.getElementById('specifications').value = product.specifications ? 
-                JSON.stringify(product.specifications, null, 2) : '{}';
             
             document.getElementById('uploadStatus').style.display = 'none';
             document.getElementById('productModal').classList.add('active');

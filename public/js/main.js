@@ -1,28 +1,17 @@
-// public/js/main.js - UPDATED VERSION
+// public/js/main.js - FIXED MOBILE NAVIGATION
 
-// Mobile Menu Toggle
 document.addEventListener('DOMContentLoaded', function() {
+    // Mobile Menu Toggle
     const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
-    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-    const body = document.body;
     
-    if (mobileMenuToggle) {
+    if (mobileMenuToggle && navMenu) {
         mobileMenuToggle.addEventListener('click', function() {
-            const isActive = navMenu.classList.toggle('active');
-            
-            // Toggle body scroll
-            if (isActive) {
-                body.classList.add('menu-open');
-                mobileMenuOverlay.classList.add('active');
-            } else {
-                body.classList.remove('menu-open');
-                mobileMenuOverlay.classList.remove('active');
-            }
+            navMenu.classList.toggle('active');
             
             // Toggle icon
             const icon = this.querySelector('i');
-            if (icon.classList.contains('fa-bars')) {
+            if (navMenu.classList.contains('active')) {
                 icon.classList.remove('fa-bars');
                 icon.classList.add('fa-times');
             } else {
@@ -30,19 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon.classList.add('fa-bars');
             }
         });
-        
-        // Close menu when overlay is clicked
-        if (mobileMenuOverlay) {
-            mobileMenuOverlay.addEventListener('click', function() {
-                navMenu.classList.remove('active');
-                body.classList.remove('menu-open');
-                this.classList.remove('active');
-                
-                const icon = mobileMenuToggle.querySelector('i');
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            });
-        }
     }
     
     // Mobile Dropdown Toggle
@@ -69,10 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', function() {
         if (window.innerWidth > 768) {
             navMenu.classList.remove('active');
-            body.classList.remove('menu-open');
-            if (mobileMenuOverlay) {
-                mobileMenuOverlay.classList.remove('active');
-            }
             
             if (mobileMenuToggle) {
                 const icon = mobileMenuToggle.querySelector('i');
@@ -87,43 +59,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Newsletter Form Submission
-    const newsletterForm = document.getElementById('newsletter-form');
-    const newsletterMessage = document.getElementById('newsletter-message');
-    
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const email = formData.get('email');
-            
-            try {
-                const response = await fetch('/newsletter', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    newsletterMessage.innerHTML = `<div style="color: #28a745; padding: 10px; background: #d4edda; border-radius: 5px;">${data.message}</div>`;
-                    newsletterForm.reset();
-                } else {
-                    newsletterMessage.innerHTML = `<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px;">${data.message}</div>`;
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+            if (!e.target.closest('.main-nav')) {
+                navMenu.classList.remove('active');
+                if (mobileMenuToggle) {
+                    const icon = mobileMenuToggle.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
                 }
-                
-                setTimeout(() => {
-                    newsletterMessage.innerHTML = '';
-                }, 5000);
-            } catch (error) {
-                newsletterMessage.innerHTML = '<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px;">An error occurred. Please try again.</div>';
             }
-        });
-    }
+        }
+    });
     
     // Smooth Scroll for Anchor Links
     const anchorLinks = document.querySelectorAll('a[href^="#"]');
@@ -137,38 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-    // Add loading animation to buttons
-    const buttons = document.querySelectorAll('button[type="submit"]');
-    buttons.forEach(button => {
-        button.addEventListener('click', function() {
-            const originalText = this.innerHTML;
-            if (!this.classList.contains('loading')) {
-                this.classList.add('loading');
-                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                
-                setTimeout(() => {
-                    this.classList.remove('loading');
-                    this.innerHTML = originalText;
-                }, 3000);
-            }
-        });
-    });
-    
-    // Image Lazy Loading
-    const images = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.removeAttribute('data-src');
-                observer.unobserve(img);
-            }
-        });
-    });
-    
-    images.forEach(img => imageObserver.observe(img));
     
     // Back to Top Button
     const createBackToTop = () => {
@@ -212,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         button.addEventListener('mouseleave', () => {
-            button.style.backgroundColor = '#0066cc';
+            button.style.backgroundColor = '#5800ccff';
             button.style.transform = 'translateY(0)';
         });
     };
@@ -231,34 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
-    // Add animation class when elements come into view
-    const animateOnScroll = () => {
-        const elements = document.querySelectorAll('.product-card, .category-card, .promo-card, .feature-card');
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '0';
-                    entry.target.style.transform = 'translateY(20px)';
-                    entry.target.style.transition = 'all 0.5s ease';
-                    
-                    setTimeout(() => {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }, 100);
-                    
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-        
-        elements.forEach(element => observer.observe(element));
-    };
-    
-    animateOnScroll();
     
     // Fix image error handling
     document.querySelectorAll('img').forEach(img => {

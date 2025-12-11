@@ -1,106 +1,201 @@
 <%- include('partials/header') %>
 
 <main class="brands-page">
-    <div class="page-header" style="background-image: url('/images/heroHome.jpg'); background-size: cover; background-position: center;">
+    <div class="page-header">
         <div class="container">
             <h1>Shop by Brand</h1>
-            <p>Browse products from your favorite brands</p>
+            <p>Explore our trusted brands and their products</p>
         </div>
     </div>
     
     <section class="brands-content">
         <div class="container">
-            <div class="brands-showcase-large">
-                <% if (brands && brands.length > 0) { %>
+            <% if (brands && brands.length > 0) { %>
+                <div class="brands-grid">
                     <% brands.forEach(brand => { %>
-                        <% 
-                            const brandName = brand.name;
-                            const brandId = brand._id || brand.id;
-                            const productsForBrand = brandProducts[brandName] || brandProducts[brandId] || [];
-                            
-                            let logoUrl = '';
-                            if (brand.image) {
-                                if (typeof brand.image === 'object' && brand.image.url) {
-                                    logoUrl = brand.image.url;
-                                } else if (typeof brand.image === 'string') {
-                                    logoUrl = brand.image;
-                                }
-                            } else if (brand.logo) {
-                                if (typeof brand.logo === 'object' && brand.logo.url) {
-                                    logoUrl = brand.logo.url;
-                                } else if (typeof brand.logo === 'string') {
-                                    logoUrl = brand.logo;
-                                }
-                            }
-                        %>
-                        <div class="brand-section">
-                            <div class="brand-header">
-                                <% if (logoUrl) { %>
-                                    <img src="<%= logoUrl %>" alt="<%= brand.name %>">
-                                <% } else { %>
-                                    <div style="height: 80px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 8px;">
-                                        <i class="fas fa-image" style="font-size: 40px; color: #ccc;"></i>
-                                    </div>
-                                <% } %>
-                                <h2><%= brand.name %></h2>
-                                <p><%= productsForBrand.length %> products available</p>
-                            </div>
-                            
-                            <% if (productsForBrand.length > 0) { %>
-                                <div class="products-grid">
-                                    <% productsForBrand.slice(0, 4).forEach(product => { %>
-                                        <div class="product-card">
-                                            <div class="product-image">
-                                                <a href="/product/<%= product._id || product.id %>">
-                                                    <% 
-                                                    <% 
-                                                    // Safe image URL extraction
-                                                    let imageUrl = '';
-                                                    if (brand.image) {
-                                                        if (typeof brand.image === 'object' && brand.image.url) {
-                                                             imageUrl = brand.image.url;
-                                                            } else if (typeof brand.image === 'string') {
-                                                                imageUrl = brand.image;
-                                                            }
-                                                        }
-                                                        %>
-                                                        <img src="<%= imageUrl || '/images/placeholder.jpg' %>" 
-                                                        alt="<%= brand.name %>"
-                                                        onerror="this.src='/images/placeholder.jpg'">
-                                                </a>
-                                                <% if (product.featured) { %>
-                                                    <span class="badge">Featured</span>
-                                                <% } %>
-                                            </div>
-                                            <div class="product-info">
-                                                <p class="product-brand"><%= product.brand?.name || product.brand %></p>
-                                                <h3 class="product-name">
-                                                    <a href="/product/<%= product._id || product.id %>"><%= product.name %></a>
-                                                </h3>
-                                                <p class="product-price">₦<%= product.price ? product.price.toLocaleString() : '0' %></p>
-                                                <a href="/product/<%= product._id || product.id %>" class="btn btn-outline">View Details</a>
-                                            </div>
-                                        </div>
-                                    <% }); %>
+                        <div class="brand-card">
+                            <a href="/brand/<%= brand._id || brand.id %>">
+                                <div class="brand-logo">
+                                    <% 
+                                    let brandImage = '';
+                                    if (brand.image) {
+                                        brandImage = brand.image;
+                                    }
+                                    %>
+                                    <img src="<%= brandImage || '/images/placeholder.jpg' %>" 
+                                         alt="<%= brand.name %>"
+                                         onerror="this.src='/images/placeholder.jpg'">
                                 </div>
-                                
-                                <% if (productsForBrand.length > 4) { %>
-                                    <div class="text-center" style="margin-top: 20px;">
-                                        <a href="/brand/<%= brandId %>" class="btn btn-secondary">View All <%= brand.name %> Products</a>
-                                    </div>
-                                <% } %>
-                            <% } %>
+                                <div class="brand-info">
+                                    <h3><%= brand.name %></h3>
+                                    <% if (brand.description) { %>
+                                        <p><%= brand.description %></p>
+                                    <% } %>
+                                    <span class="view-brand">
+                                        View Products <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </div>
+                            </a>
                         </div>
                     <% }); %>
-                <% } else { %>
-                    <div style="text-align: center; padding: 80px 20px;">
-                        <i class="fas fa-tags" style="font-size: 80px; color: #ddd; margin-bottom: 20px;"></i>
-                        <p style="font-size: 18px; color: #666;">No brands available at the moment.</p>
-                    </div>
-                <% } %>
-            </div>
+                </div>
+            <% } else { %>
+                <div class="no-brands">
+                    <i class="fas fa-box-open"></i>
+                    <h2>No Brands Available</h2>
+                    <p>We're currently updating our brands. Please check back soon!</p>
+                    <a href="/" class="btn btn-primary">Go to Homepage</a>
+                </div>
+            <% } %>
         </div>
     </section>
 </main>
+
+<style>
+    .brands-page {
+        padding: 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .brands-content {
+        padding: 60px 0;
+    }
+
+    .brands-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .brand-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .brand-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .brand-card a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .brand-logo {
+        width: 100%;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 20px;
+    }
+
+    .brand-logo img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s;
+    }
+
+    .brand-card:hover .brand-logo img {
+        transform: scale(1.1);
+    }
+
+    .brand-info {
+        padding: 20px;
+        text-align: center;
+    }
+
+    .brand-info h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .brand-info p {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .view-brand {
+        color: var(--primary-color);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: gap 0.3s;
+    }
+
+    .brand-card:hover .view-brand {
+        gap: 10px;
+    }
+
+    .no-brands {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .no-brands i {
+        font-size: 80px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .no-brands h2 {
+        font-size: 32px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .no-brands p {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .page-header p {
+            font-size: 1rem;
+        }
+
+        .brands-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .brand-logo {
+            height: 120px;
+        }
+    }
+</style>
 
 <%- include('partials/footer') %>

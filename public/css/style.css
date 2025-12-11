@@ -2227,21 +2227,16 @@ ul {
     }
     
     /* Fix navigation dropdowns on mobile */
-    .has-dropdown {
-        position: relative;
-    }
-    
-    .dropdown-menu {
-        position: static !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        transform: none !important;
-        box-shadow: none;
-        background-color: rgba(255, 255, 255, 0.1);
-        display: none;
-        max-height: 300px;
-        overflow-y: auto;
-    }
+    .has-dropdown .dropdown-menu {
+    position: static;
+    display: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
     
     .has-dropdown.active .dropdown-menu {
         display: block;
@@ -2287,21 +2282,24 @@ ul {
     
     /* Fix mobile menu */
     .nav-menu {
-        position: fixed;
-        top: 0;
-        left: -100%;
-        width: 80%;
-        max-width: 300px;
-        height: 100vh;
-        background: var(--primary-color);
-        z-index: 1000;
-        overflow-y: auto;
-        transition: left 0.3s ease;
-        padding-top: 60px;
-    }
+    display: none;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background: var(--primary-color);
+    z-index: 1000;
+    overflow-y: auto;
+    transition: left 0.3s ease;
+    padding-top: 60px;
+    flex-direction: column;
+    }  
     
     .nav-menu.active {
-        left: 0;
+    left: 0;
+    display: flex;
     }
     
     /* Mobile menu overlay */
@@ -2381,4 +2379,174 @@ ul {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+
+/* ADD THIS TO YOUR style.css - Mobile Responsive Navigation */
+
+/* Header - Make it sticky */
+.top-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Navigation improvements */
+.main-nav {
+  background: var(--primary-color);
+  position: sticky;
+  top: 60px; /* Adjust based on your header height */
+  z-index: 999;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-menu > li {
+  position: relative;
+}
+
+.nav-menu > li > a {
+  display: block;
+  padding: 15px 20px;
+  color: white;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.nav-menu > li > a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown menu */
+.has-dropdown .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  min-width: 200px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: none;
+  z-index: 1000;
+}
+
+.has-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu li a {
+  display: block;
+  padding: 10px 20px;
+  color: #333;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.dropdown-menu li a:hover {
+  background-color: #f5f5f5;
+}
+
+/* Mobile menu toggle - hide by default */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  /* Make header smaller on mobile */
+  .top-header .container {
+    padding: 10px 15px;
+  }
+  
+  .logo h1 {
+    font-size: 1.2rem;
+  }
+  
+  .header-actions {
+    gap: 10px;
+  }
+  
+  .header-actions a {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  /* Adjust sticky position for smaller header */
+  .main-nav {
+    top: 50px;
+  }
+  
+  /* Show mobile toggle */
+  .mobile-menu-toggle {
+    display: block;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  /* Hide menu by default on mobile */
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: var(--primary-color);
+  }
+  
+  /* Show menu when active */
+  .nav-menu.active {
+    display: flex;
+  }
+  
+  .nav-menu > li {
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .nav-menu > li > a {
+    padding: 12px 20px;
+  }
+  
+  /* Dropdown on mobile */
+  .has-dropdown .dropdown-menu {
+    position: static;
+    display: none;
+    box-shadow: none;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  .has-dropdown.active .dropdown-menu {
+    display: block;
+  }
+  
+  .dropdown-menu li a {
+    color: white;
+    padding-left: 40px;
+  }
+  
+  .dropdown-menu li a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Tablet styles */
+@media (max-width: 992px) and (min-width: 769px) {
+  .nav-menu > li > a {
+    padding: 15px 15px;
+    font-size: 14px;
+  }
 }

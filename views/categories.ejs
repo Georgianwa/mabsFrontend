@@ -1,43 +1,197 @@
 <%- include('partials/header') %>
 
 <main class="categories-page">
-    <div class="page-header" style="background-image: url('/images/heroHome.jpg'); background-size: cover; background-position: center;">
+    <div class="page-header">
         <div class="container">
-            <h1>All Categories</h1>
-            <p>Browse our complete range of electronics and appliances</p>
+            <h1>Shop by Category</h1>
+            <p>Browse our wide range of product categories</p>
         </div>
     </div>
     
     <section class="categories-content">
         <div class="container">
-            <div class="category-grid-large">
-                <% categories.forEach(category => { %>
-                    <div class="category-card-large">
-                        <a href="/category/<%= category._id || category.id %>">
-                            <div class="category-image">
-                                <% 
-                                let imageUrl = '';
-                                if (category.image) {
-                                    if (typeof category.image === 'object' && category.image.url) {
-                                        imageUrl = category.image.url;
-                                    } else if (typeof category.image === 'string') {
-                                        imageUrl = category.image;
+            <% if (categories && categories.length > 0) { %>
+                <div class="categories-grid">
+                    <% categories.forEach(category => { %>
+                        <div class="category-card">
+                            <a href="/category/<%= category._id || category.id %>">
+                                <div class="category-image">
+                                    <% 
+                                    let categoryImage = '';
+                                    if (category.image) {
+                                        categoryImage = category.image;
                                     }
-                                }
-                                %>
-                                <img src="<%= imageUrl || '/images/placeholder.jpg' %>" alt="<%= category.title %>" onerror="this.src='/images/placeholder.jpg'">
-                            </div>
-                            <div class="category-content">
-                                <h2><%= category.title %></h2>
-                                <p><%= category.description || 'Explore our selection' %></p>
-                                <span class="btn btn-outline">Shop Now <i class="fas fa-arrow-right"></i></span>
-                            </div>
-                        </a>
-                    </div>
-                <% }); %>
-            </div>
+                                    %>
+                                    <img src="<%= categoryImage || '/images/placeholder.jpg' %>" 
+                                         alt="<%= category.title || category.name %>"
+                                         onerror="this.src='/images/placeholder.jpg'">
+                                </div>
+                                <div class="category-info">
+                                    <h3><%= category.title || category.name %></h3>
+                                    <% if (category.description) { %>
+                                        <p><%= category.description %></p>
+                                    <% } %>
+                                    <span class="view-category">
+                                        View Products <i class="fas fa-arrow-right"></i>
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="no-categories">
+                    <i class="fas fa-folder-open"></i>
+                    <h2>No Categories Available</h2>
+                    <p>We're currently updating our categories. Please check back soon!</p>
+                    <a href="/" class="btn btn-primary">Go to Homepage</a>
+                </div>
+            <% } %>
         </div>
     </section>
 </main>
+
+<style>
+    .categories-page {
+        padding: 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .page-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .categories-content {
+        padding: 60px 0;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .category-card a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .category-image {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+
+    .category-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .category-card:hover .category-image img {
+        transform: scale(1.1);
+    }
+
+    .category-info {
+        padding: 20px;
+    }
+
+    .category-info h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .category-info p {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .view-category {
+        color: var(--primary-color);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: gap 0.3s;
+    }
+
+    .category-card:hover .view-category {
+        gap: 10px;
+    }
+
+    .no-categories {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .no-categories i {
+        font-size: 80px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+
+    .no-categories h2 {
+        font-size: 32px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .no-categories p {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .page-header p {
+            font-size: 1rem;
+        }
+
+        .categories-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .category-image {
+            height: 180px;
+        }
+    }
+</style>
 
 <%- include('partials/footer') %>
