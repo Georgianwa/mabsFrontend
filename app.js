@@ -298,12 +298,16 @@ app.get('/', async (req, res) => {
 app.get('/products', async (req, res) => {
   try {
     const navData = await getNavData(req);
-    const productsRes = await apiService.get('/products', req);
+
+    const isAdmin = req.user && req.user.role === 'admin';
+
+    const productsRes = await apiService.get('/products?limit=25&page=1', req);
     const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
     
     res.render('products', {
       title: 'All Products',
       products: productList,
+      isAdmin,
       ...navData
     });
   } catch (err) {

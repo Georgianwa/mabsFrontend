@@ -171,7 +171,7 @@ function renderCart() {
       <div class="summary-content">
         <h3>Cart Summary</h3>
         <p><strong>Subtotal:</strong> ₦${subtotal.toLocaleString()}</p>
-        <p><strong>Shipping:</strong> Free shipping for orders above ₦125,000</p>
+        <p><strong>Shipping:</strong> To be calculated at checkout</p>
         <p style="font-size: 1.2em; margin-top: 10px;">
           <strong>Total:</strong> ₦${total.toLocaleString()}
         </p>

@@ -29,7 +29,7 @@
             </div>
             
             <% if (products.length > 0) { %>
-                <div class="products-grid">
+                <div class="products-grid" id="productsGrid">
                     <% products.forEach(product => { %>
                         <div class="product-card">
                             <div class="product-image">
@@ -57,6 +57,7 @@
                         </div>
                     <% }); %>
                 </div>
+
             <% } else { %>
                 <div class="no-products">
                     <i class="fas fa-box-open"></i>
@@ -66,6 +67,17 @@
                 </div>
             <% } %>
         </div>
+        <div class="load-more-wrapper" style="text-align:center; margin-top:40px;">
+            <button id="loadMoreBtn" class="btn btn-primary">
+                Load more
+            </button>
+             <% if (isAdmin) { %>
+                <button id="showAllBtn" class="btn btn-outline" style="margin-left:15px;">
+                Show all (admin)
+            </button>
+            <% } %>
+        </div>
+
     </section>
 </main>
 
@@ -151,5 +163,11 @@
         }
     }
 </style>
+
+<script>
+  window.PRODUCTS_PAGE = 1;
+  window.PRODUCTS_LIMIT = 25;
+</script>
+<script src="/js/loadMoreProducts.js"></script>
 
 <%- include('partials/footer') %>
