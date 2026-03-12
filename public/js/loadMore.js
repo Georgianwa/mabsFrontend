@@ -9,7 +9,7 @@ if (loadMoreBtn && productsGrid) {
     params.set("page", window.PRODUCTS_PAGE);
     params.set("limit", window.PRODUCTS_LIMIT);
 
-    const res = await fetch(`/api/products?${params.toString()}`);
+    const res = await fetch(`${window.API_BASE_URL}/api/products?${params.toString()}`);
     const data = await res.json();
 
     if (!data.products || data.products.length === 0) {
