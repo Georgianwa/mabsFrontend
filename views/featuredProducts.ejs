@@ -1,10 +1,10 @@
 <%- include('partials/header') %>
 
-<main class="all-products-page">
+<main class="featured-products-page">
     <div class="page-header">
         <div class="container">
-            <h1>All Products</h1>
-            <p>Browse our complete collection of electronics and appliances</p>
+            <h1>Featured Products</h1>
+            <p>Browse all our featured electronics and appliances</p>
         </div>
     </div>
     
@@ -15,8 +15,8 @@
                     <p class="results-count">Showing <strong><%= products.length %></strong> products</p>
                 </div>
                 
-              <!--  <div class="sort-filter">
-                    <form action="/all-products" method="GET" style="display: flex; gap: 15px; align-items: center;">
+            <!--    <div class="sort-filter">
+                    <form action="/featured-products" method="GET" style="display: flex; gap: 15px; align-items: center;">
                         <label for="sort-by">Sort by:</label>
                         <select id="sort-by" name="sort" onchange="this.form.submit()">
                             <option value="name">Product Name</option>
@@ -168,6 +168,6 @@
   window.PRODUCTS_PAGE = 1;
   window.PRODUCTS_LIMIT = 25;
 </script>
-<script src="/js/loadMore.js"></script>
+<script src="/js/loadMoreProducts.js"></script>
 
 <%- include('partials/footer') %>
