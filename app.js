@@ -303,10 +303,12 @@ app.get('/products', async (req, res) => {
 
     const productsRes = await apiService.get('/products?limit=25&page=1', req);
     const productList = Array.isArray(productsRes) ? productsRes : (productsRes?.products || []);
-    
+    const total = productsRes?.total || productList.length;
+
     res.render('products', {
       title: 'All Products',
       products: productList,
+      total,
       isAdmin,
       ...navData
     });

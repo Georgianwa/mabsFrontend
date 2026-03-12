@@ -47,6 +47,11 @@ if (loadMoreBtn && productsGrid) {
       productsGrid.appendChild(card);
     });
 
+    const countEl = document.getElementById('productCount');
+    if (countEl) {
+      countEl.textContent = productsGrid.querySelectorAll('.product-card').length;
+    }
+
     if (window.PRODUCTS_PAGE >= data.totalPages) {
       loadMoreBtn.style.display = "none";
     }
