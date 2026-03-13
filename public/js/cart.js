@@ -211,7 +211,12 @@ function checkout() {
   const phoneNumber = window.PHONE_NUMBER;
   
   // Remove all non-digits except the leading +
-  const cleanPhone = phoneNumber.replace(/[^\d+]/g, '');
+  const cleanPhone = (phoneNumber || '').replace(/\D/g, '');
+
+  if (!cleanPhone) {
+    alert('Checkout is currently unavailable. Please contact us directly.');
+    return;
+  }
   
   window.open(`https://wa.me/${cleanPhone}?text=${whatsappMessage}`, '_blank');
 }
