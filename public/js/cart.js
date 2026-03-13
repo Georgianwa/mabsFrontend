@@ -6,11 +6,22 @@ let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 // Update cart count in header
 function updateCartCount() {
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartCountElements = document.querySelectorAll('.cart-count');
-  cartCountElements.forEach(el => {
-    el.textContent = count;
-    el.style.display = count > 0 ? 'inline-block' : 'none';
-  });
+  
+  // Run immediately and also after DOM is ready
+  const applyCount = () => {
+    const cartCountElements = document.querySelectorAll('.cart-count');
+    cartCountElements.forEach(el => {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'inline-block' : 'none';
+    });
+  };
+
+  applyCount();
+  
+  // Also apply after DOM loads in case elements weren't ready
+  if (document.readyState !== 'complete') {
+    document.addEventListener('DOMContentLoaded', applyCount);
+  }
 }
 
 // Add item to cart - FIXED: Now properly checks by productId
