@@ -191,6 +191,7 @@ function renderCart() {
 
 // Checkout function
 function checkout() {
+  console.log('PHONE_NUMBER:', window.PHONE_NUMBER);
   if (cart.length === 0) {
     alert('Your cart is empty!');
     return;
