@@ -59,7 +59,24 @@
                 </div>
             <% } %>
         </div>
+        <div class="load-more-wrapper" style="text-align:center; margin-top:40px;">
+            <button id="loadMoreBtn" class="btn btn-primary">
+                Load more
+            </button>
+             <% if (isAdmin) { %>
+                <button id="showAllBtn" class="btn btn-outline" style="margin-left:15px;">
+                Show all (admin)
+            </button>
+            <% } %>
+        </div>
+
     </section>
 </main>
+<script>
+  window.PRODUCTS_PAGE = 1;
+  window.PRODUCTS_LIMIT = 25;
+  window.API_BASE_URL = "https://mabselectronicsbackend.onrender.com";
+</script>
+<script src="/js/loadMore.js"></script>
 
 <%- include('partials/footer') %>
